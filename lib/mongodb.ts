@@ -23,19 +23,17 @@ export async function dbConnect() {
 
   if (!cached!.promise) {
     cached!.promise = (async () => {
-      if (isDev) {
-        console.log("[MongoDB] Connecting to", MONGODB_URI);
-      }
+      // Log connection attempt (hide credentials)
+      const safeUri = MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, "//***:***@");
+      console.log("[MongoDB] Connecting to", safeUri);
       try {
         const conn = await mongoose.connect(MONGODB_URI, {
           dbName: process.env.MONGODB_DB || "transportbooking",
         });
-        if (isDev) {
-          console.log("[MongoDB] Connected");
-        }
+        console.log("[MongoDB] ✅ Connected successfully");
         return conn;
-      } catch (err) {
-        console.error("[MongoDB] Connection error", err);
+      } catch (err: any) {
+        console.error("[MongoDB] ❌ Connection error:", err?.message || err);
         throw err;
       }
     })();
