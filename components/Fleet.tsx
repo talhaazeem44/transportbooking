@@ -1,107 +1,121 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './Fleet.module.css';
 import Reservation from './Reservation';
 
-const vehicles = [
-    {
-        name: "Executive Sedan",
-        category: "Business Class",
-        specs: { passengers: 3, luggage: 3 },
-        description: "Elegant BMW 7 Series or Lincoln Continental for sophisticated city travel.",
-        image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070&auto=format&fit=crop"
-    },
-    {
-        name: "Luxury SUV",
-        category: "Elite Comfort",
-        specs: { passengers: 6, luggage: 6 },
-        description: "Cadillac Escalade or GMC Yukon XL offering spacious, premium travel.",
-        image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=2070&auto=format&fit=crop"
-    },
-    {
-        name: "Tesla Model S",
-        category: "Eco-Luxury",
-        specs: { passengers: 3, luggage: 3 },
-        description: "Zero-emission, silent, and cutting-edge luxury at our standard rates.",
-        image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=2071&auto=format&fit=crop"
-    },
-    {
-        name: "Stretch Limousine",
-        category: "Classic Luxury",
-        specs: { passengers: 8, luggage: 4 },
-        description: "The ultimate statement for weddings, proms, and gala events.",
-        image: "https://images.unsplash.com/photo-1511210352396-54a060633c32?q=80&w=2114&auto=format&fit=crop"
-    },
-    {
-        name: "Mercedes Sprinter",
-        category: "Group Travel",
-        specs: { passengers: 14, luggage: 14 },
-        description: "Premium group transportation with ample space for luggage and comfort.",
-        image: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5947?q=80&w=2070&auto=format&fit=crop"
-    },
-    {
-        name: "SUV Stretch Limo",
-        category: "Party Elite",
-        specs: { passengers: 16, luggage: 8 },
-        description: "Massive presence and ultra-luxury interior for the biggest occasions.",
-        image: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5947?q=80&w=2070&auto=format&fit=crop"
-    }
-];
+interface Vehicle {
+  id: string;
+  name: string;
+  category: string;
+  image: string;
+  passengers: number;
+  luggage: number;
+  description: string;
+}
 
 export default function Fleet() {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState('');
 
-    const handleBookNow = (vehicleName: string) => {
-        setSelectedVehicle(vehicleName);
-        setIsModalOpen(true);
+  useEffect(() => {
+    const loadVehicles = async () => {
+      try {
+        const res = await fetch('/api/vehicles');
+        const data = await res.json();
+        setVehicles(data.items || []);
+      } catch (e) {
+        console.error('Failed to load vehicles:', e);
+      } finally {
+        setLoading(false);
+      }
     };
+    loadVehicles();
+  }, []);
 
+  const handleBookNow = (vehicleName: string) => {
+    setSelectedVehicle(vehicleName);
+    setIsModalOpen(true);
+  };
+
+  if (loading) {
     return (
-        <section id="fleet" className={styles.fleet}>
-            <div className="container">
-                <div className={styles.sectionHeader}>
-                    <span className={styles.sectionSubtitle}>Our Collection</span>
-                    <h2 className={styles.sectionTitle}>The Fleet Of Excellence</h2>
-                </div>
-
-                <div className={styles.grid}>
-                    {vehicles.map((vehicle, index) => (
-                        <div key={index} className={styles.vehicleCard}>
-                            <div className={styles.imageWrapper}>
-                                <img src={vehicle.image} alt={vehicle.name} className={styles.vehicleImage} />
-                            </div>
-                            <div className={styles.content}>
-                                <span className={styles.category}>{vehicle.category}</span>
-                                <h3 className={styles.name}>{vehicle.name}</h3>
-                                <div className={styles.specs}>
-                                    <div className={styles.specItem}>
-                                        <span>👥</span> {vehicle.specs.passengers}
-                                    </div>
-                                    <div className={styles.specItem}>
-                                        <span>🧳</span> {vehicle.specs.luggage}
-                                    </div>
-                                </div>
-                                <p className={styles.description}>{vehicle.description}</p>
-                                <button
-                                    className={`btn-primary ${styles.bookBtn}`}
-                                    onClick={() => handleBookNow(vehicle.name)}
-                                >
-                                    Book Now
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {isModalOpen && (
-                <Reservation
-                    isModal={true}
-                    selectedVehicle={selectedVehicle}
-                    onClose={() => setIsModalOpen(false)}
-                />
-            )}
-        </section>
+      <section id="fleet" className={styles.fleet}>
+        <div className="container">
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionSubtitle}>Our Collection</span>
+            <h2 className={styles.sectionTitle}>The Fleet Of Excellence</h2>
+          </div>
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#A0A0A0' }}>
+            Loading vehicles...
+          </div>
+        </div>
+      </section>
     );
+  }
+
+  return (
+    <section id="fleet" className={styles.fleet}>
+      <div className="container">
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionSubtitle}>Our Collection</span>
+          <h2 className={styles.sectionTitle}>The Fleet Of Excellence</h2>
+        </div>
+
+        {vehicles.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#A0A0A0' }}>
+            No vehicles available at the moment.
+          </div>
+        ) : (
+          <div className={styles.grid}>
+            {vehicles.map((vehicle) => (
+              <div key={vehicle.id} className={styles.vehicleCard}>
+                <div className={styles.imageWrapper}>
+                  {vehicle.image ? (
+                    <img src={vehicle.image} alt={vehicle.name} className={styles.vehicleImage} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', background: '#1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A0A0A0' }}>
+                      No Image
+                    </div>
+                  )}
+                </div>
+                <div className={styles.content}>
+                  {vehicle.category && (
+                    <span className={styles.category}>{vehicle.category}</span>
+                  )}
+                  <h3 className={styles.name}>{vehicle.name}</h3>
+                  <div className={styles.specs}>
+                    <div className={styles.specItem}>
+                      <span>👥</span> {vehicle.passengers || 0}
+                    </div>
+                    <div className={styles.specItem}>
+                      <span>🧳</span> {vehicle.luggage || 0}
+                    </div>
+                  </div>
+                  {vehicle.description && (
+                    <p className={styles.description}>{vehicle.description}</p>
+                  )}
+                  <button
+                    className={`btn-primary ${styles.bookBtn}`}
+                    onClick={() => handleBookNow(vehicle.name)}
+                  >
+                    Book Now
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {isModalOpen && (
+        <Reservation
+          isModal={true}
+          selectedVehicle={selectedVehicle}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+    </section>
+  );
 }
