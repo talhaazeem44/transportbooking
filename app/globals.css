@@ -3,7 +3,8 @@
 :root {
   --background: #0A0A0A;
   --foreground: #F5F5F5;
-  --accent: #D4AF37; /* Gold */
+  --accent: #D4AF37;
+  /* Gold */
   --accent-light: #F1D38E;
   --secondary: #1A1A1A;
   --text-muted: #A0A0A0;
@@ -29,7 +30,11 @@ body {
   scroll-behavior: smooth;
 }
 
-h1, h2, h3, h4, .serif {
+h1,
+h2,
+h3,
+h4,
+.serif {
   font-family: var(--font-serif);
 }
 
