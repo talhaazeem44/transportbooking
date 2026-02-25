@@ -5,45 +5,45 @@ import Reservation from './Reservation';
 
 const vehicles = [
     {
-        name: "Executive Sedan",
+        name: "Executive Sedans",
         category: "Business Class",
         specs: { passengers: 3, luggage: 3 },
-        description: "Elegant BMW 7 Series or Lincoln Continental for sophisticated city travel.",
+        description: "BMW 7 Series, Lincoln Continental. Reliable. Affordable. Convenient.",
         image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070&auto=format&fit=crop"
     },
     {
-        name: "Luxury SUV",
+        name: "Luxury SUVs",
         category: "Elite Comfort",
         specs: { passengers: 6, luggage: 6 },
-        description: "Cadillac Escalade or GMC Yukon XL offering spacious, premium travel.",
+        description: "Cadillac Escalade, GMC Yukon XL. Space for up to 6 passengers or extra luggage.",
         image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=2070&auto=format&fit=crop"
     },
     {
         name: "Tesla Model S",
         category: "Eco-Luxury",
         specs: { passengers: 3, luggage: 3 },
-        description: "Zero-emission, silent, and cutting-edge luxury at our standard rates.",
+        description: "Zero-emission option at the same airport limo Toronto flat rate. Ride in total comfort with complimentary Wi-Fi.",
         image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=2071&auto=format&fit=crop"
     },
     {
         name: "Stretch Limousine",
         category: "Classic Luxury",
         specs: { passengers: 8, luggage: 4 },
-        description: "The ultimate statement for weddings, proms, and gala events.",
+        description: "Lincoln Stretch Limo, SUV Stretch Limo. The ultimate statement for any special occasion.",
         image: "https://images.unsplash.com/photo-1511210352396-54a060633c32?q=80&w=2114&auto=format&fit=crop"
     },
     {
-        name: "Mercedes Sprinter",
+        name: "Mercedes Sprinter Van",
         category: "Group Travel",
         specs: { passengers: 14, luggage: 14 },
-        description: "Premium group transportation with ample space for luggage and comfort.",
+        description: "Premium group transportation with ample space for 14 passengers and luggage.",
         image: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5947?q=80&w=2070&auto=format&fit=crop"
     },
     {
-        name: "SUV Stretch Limo",
+        name: "SUV Stretch Limo XL",
         category: "Party Elite",
         specs: { passengers: 16, luggage: 8 },
-        description: "Massive presence and ultra-luxury interior for the biggest occasions.",
+        description: "Massive presence and ultra-luxury interior for the biggest occasions and parties.",
         image: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5947?q=80&w=2070&auto=format&fit=crop"
     }
 ];
@@ -61,8 +61,8 @@ export default function Fleet() {
         <section id="fleet" className={styles.fleet}>
             <div className="container">
                 <div className={styles.sectionHeader}>
-                    <span className={styles.sectionSubtitle}>Our Collection</span>
-                    <h2 className={styles.sectionTitle}>The Fleet Of Excellence</h2>
+                    <h2 className={styles.sectionTitle}>Reliable & Clean Vehicles</h2>
+                    <p className={styles.sectionLead}>We operate 24/7 all year round, serving our clients in Toronto and rest of Southern Ontario.</p>
                 </div>
 
                 <div className={styles.grid}>
@@ -72,14 +72,13 @@ export default function Fleet() {
                                 <img src={vehicle.image} alt={vehicle.name} className={styles.vehicleImage} />
                             </div>
                             <div className={styles.content}>
-                                <span className={styles.category}>{vehicle.category}</span>
                                 <h3 className={styles.name}>{vehicle.name}</h3>
                                 <div className={styles.specs}>
                                     <div className={styles.specItem}>
-                                        <span>👥</span> {vehicle.specs.passengers}
+                                        <span>👥</span> {vehicle.specs.passengers} Passengers
                                     </div>
                                     <div className={styles.specItem}>
-                                        <span>🧳</span> {vehicle.specs.luggage}
+                                        <span>🧳</span> {vehicle.specs.luggage} Bags
                                     </div>
                                 </div>
                                 <p className={styles.description}>{vehicle.description}</p>
@@ -87,7 +86,7 @@ export default function Fleet() {
                                     className={`btn-primary ${styles.bookBtn}`}
                                     onClick={() => handleBookNow(vehicle.name)}
                                 >
-                                    Book Now
+                                    BOOK NOW
                                 </button>
                             </div>
                         </div>
