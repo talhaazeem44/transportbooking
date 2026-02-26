@@ -34,16 +34,29 @@ export async function sendAdminNewReservationEmail(payload: {
   console.log("[Email] SMTP configured. Sending to:", to);
 
   try {
+    // Production environment me better connection settings
+    const isProduction = process.env.NODE_ENV === "production";
+    
     const transporter = nodemailer.createTransport({
       host,
       port,
-      secure: port === 465,
+      secure: port === 465, // SSL for port 465
       auth: { user, pass },
-      // Force IPv4 to avoid IPv6 connection issues
+      // Force IPv4 to avoid IPv6 connection issues (Railway network issue)
       family: 4,
-      // Connection timeout
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
+      // Connection timeouts
+      connectionTimeout: isProduction ? 30000 : 10000, // Longer timeout in production
+      greetingTimeout: isProduction ? 30000 : 10000,
+      socketTimeout: isProduction ? 30000 : 10000,
+      // Retry settings for production
+      pool: isProduction, // Use connection pooling in production
+      maxConnections: isProduction ? 5 : 1,
+      maxMessages: isProduction ? 100 : 1,
+      // TLS options for better compatibility
+      tls: {
+        rejectUnauthorized: false, // Some Railway networks need this
+        ciphers: 'SSLv3',
+      },
     });
 
     const subject = `New Reservation: ${payload.name} - ${payload.serviceType}`;
@@ -78,6 +91,12 @@ export async function sendAdminNewReservationEmail(payload: {
       `Destination: ${payload.destinationAddress}`,
     ].join("\n");
 
+    // Verify connection first (especially important in production)
+    if (process.env.NODE_ENV === "production") {
+      await transporter.verify();
+      console.log("[Email] ✅ SMTP connection verified");
+    }
+    
     await transporter.sendMail({ 
       from, 
       to, 
@@ -91,6 +110,19 @@ export async function sendAdminNewReservationEmail(payload: {
     console.error("[Email] ❌ Failed to send notification:", error?.message || error);
     console.error("[Email] Error code:", error?.code);
     console.error("[Email] Error syscall:", error?.syscall);
+    console.error("[Email] Error address:", error?.address);
+    
+    // Production-specific error messages
+    if (process.env.NODE_ENV === "production") {
+      if (error?.code === "ENETUNREACH" || error?.code === "ECONNREFUSED") {
+        console.error("[Email] ⚠️  Network connection issue. Railway might be blocking SMTP.");
+        console.error("[Email] 💡 Solutions:");
+        console.error("   1. Try using port 465 with SSL (change SMTP_PORT=465)");
+        console.error("   2. Use alternative SMTP service (SendGrid, Mailgun)");
+        console.error("   3. Check Railway network/firewall settings");
+      }
+    }
+    
     // Re-throw error so calling code knows it failed
     throw error;
   }
