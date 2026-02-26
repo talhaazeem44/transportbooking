@@ -52,6 +52,7 @@ const vehicles = [
     passengers: 3,
     luggage: 3,
     description: "Elegant BMW 7 Series or Lincoln Continental for sophisticated city travel.",
+    rate: 120,
   },
   {
     name: "Luxury SUV",
@@ -60,6 +61,7 @@ const vehicles = [
     passengers: 6,
     luggage: 6,
     description: "Cadillac Escalade or GMC Yukon XL offering spacious, premium travel.",
+    rate: 180,
   },
   {
     name: "Tesla Model S",
@@ -68,6 +70,7 @@ const vehicles = [
     passengers: 3,
     luggage: 3,
     description: "Zero-emission, silent, and cutting-edge luxury at our standard rates.",
+    rate: 150,
   },
   {
     name: "Stretch Limousine",
@@ -76,6 +79,7 @@ const vehicles = [
     passengers: 8,
     luggage: 4,
     description: "The ultimate statement for weddings, proms, and gala events.",
+    rate: 250,
   },
   {
     name: "Mercedes Sprinter",
@@ -84,6 +88,7 @@ const vehicles = [
     passengers: 14,
     luggage: 14,
     description: "Premium group transportation with ample space for luggage and comfort.",
+    rate: 300,
   },
   {
     name: "SUV Stretch Limo",
@@ -92,6 +97,7 @@ const vehicles = [
     passengers: 16,
     luggage: 8,
     description: "Massive presence and ultra-luxury interior for the biggest occasions.",
+    rate: 350,
   },
 ];
 
@@ -127,6 +133,7 @@ async function main() {
           passengers: { type: Number, default: 0 },
           luggage: { type: Number, default: 0 },
           description: { type: String, trim: true },
+          rate: { type: Number, default: 0 },
         },
         { timestamps: true }
       )
@@ -140,9 +147,28 @@ async function main() {
 
   console.log("🚗 Seeding vehicles...");
   for (const vehicle of vehicles) {
+    // Update image if it's a local path, otherwise just upsert
+    const updateData = {
+      $setOnInsert: {
+        name: vehicle.name,
+        category: vehicle.category,
+        image: vehicle.image,
+        passengers: vehicle.passengers,
+        luggage: vehicle.luggage,
+        description: vehicle.description,
+        rate: vehicle.rate || 0,
+      },
+    };
+    
+    // If vehicle exists with local image path, update it
+    const existing = await VehiclePreference.findOne({ name: vehicle.name }).lean();
+    if (existing && (existing.image?.startsWith("/uploads/") || existing.image?.includes("railway.app/uploads/"))) {
+      updateData.$set = { image: vehicle.image, rate: vehicle.rate || 0 };
+    }
+    
     await VehiclePreference.updateOne(
       { name: vehicle.name },
-      { $setOnInsert: vehicle },
+      updateData,
       { upsert: true }
     );
     console.log(`  ✓ ${vehicle.name}`);

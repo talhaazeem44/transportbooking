@@ -10,7 +10,8 @@
     "start:next": "next start",
     "lint": "eslint",
     "db:seed": "node scripts/seed.mjs",
-    "admin:create": "node scripts/create-admin.mjs"
+    "admin:create": "node scripts/create-admin.mjs",
+    "fix:images": "node scripts/fix-vehicle-images.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
