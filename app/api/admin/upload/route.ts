@@ -42,7 +42,12 @@ export async function POST(req: NextRequest) {
     console.log("[Upload] File saved to:", filepath);
 
     // Return public URL
-    const publicUrl = `/uploads/vehicles/${filename}`;
+    // In production, use absolute URL if available
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                    process.env.RAILWAY_PUBLIC_DOMAIN ? 
+                      `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : 
+                      '';
+    const publicUrl = baseUrl ? `${baseUrl}/uploads/vehicles/${filename}` : `/uploads/vehicles/${filename}`;
     
     console.log("[Upload] Returning URL:", publicUrl);
     const response = NextResponse.json({ url: publicUrl });

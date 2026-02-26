@@ -74,12 +74,32 @@ export default function Fleet() {
               <div key={vehicle.id} className={styles.vehicleCard}>
                 <div className={styles.imageWrapper}>
                   {vehicle.image ? (
-                    <img src={vehicle.image} alt={vehicle.name} className={styles.vehicleImage} />
-                  ) : (
-                    <div style={{ width: '100%', height: '100%', background: '#1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A0A0A0' }}>
-                      No Image
-                    </div>
-                  )}
+                    <img 
+                      src={vehicle.image} 
+                      alt={vehicle.name} 
+                      className={styles.vehicleImage}
+                      onError={(e) => {
+                        // Fallback if image fails to load
+                        console.error("[Fleet] Image load error:", vehicle.image);
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      background: '#1A1A1A', 
+                      display: vehicle.image ? 'none' : 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      color: '#A0A0A0' 
+                    }}
+                  >
+                    {vehicle.image ? 'Image not available' : 'No Image'}
+                  </div>
                 </div>
                 <div className={styles.content}>
                   {vehicle.category && (
