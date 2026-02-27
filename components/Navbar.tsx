@@ -24,9 +24,9 @@ export default function Navbar() {
         <div className={styles.navLinks}>
           <Link href="#services">Services</Link>
           <Link href="#fleet">Fleet</Link>
-          <Link href="#rates">Rates</Link>
+          <Link href="/rates">Rates</Link>
           <Link href="#about">About</Link>
-          <button className={`btn-primary ${styles.navCta}`}>Book Now</button>
+          <Link href="#book" className={`btn-primary ${styles.navCta}`}>Book Now</Link>
         </div>
       </div>
     </nav>

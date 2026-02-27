@@ -3,6 +3,14 @@ import React, { useState, useEffect } from 'react';
 import styles from './Fleet.module.css';
 import Reservation from './Reservation';
 
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+
 interface Vehicle {
   id: string;
   name: string;
@@ -69,76 +77,100 @@ export default function Fleet() {
             No vehicles available at the moment.
           </div>
         ) : (
-          <div className={styles.grid}>
-            {vehicles.map((vehicle) => (
-              <div key={vehicle.id} className={styles.vehicleCard}>
-                <div className={styles.imageWrapper}>
-                  {vehicle.image ? (
-                    <img 
-                      src={vehicle.image.startsWith('http') ? vehicle.image : vehicle.image}
-                      alt={vehicle.name} 
-                      className={styles.vehicleImage}
-                      loading="lazy"
-                      onError={(e) => {
-                        // Fallback if image fails to load
-                        console.error("[Fleet] Image load error for:", vehicle.name);
-                        console.error("[Fleet] Image URL:", vehicle.image);
-                        e.currentTarget.style.display = 'none';
-                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                        if (fallback) fallback.style.display = 'flex';
-                      }}
-                      onLoad={() => {
-                        console.log("[Fleet] Image loaded successfully:", vehicle.image);
-                      }}
-                    />
-                  ) : null}
-                  <div 
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      background: '#1A1A1A', 
-                      display: vehicle.image ? 'none' : 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      color: '#A0A0A0' 
-                    }}
-                  >
-                    {vehicle.image ? 'Image not available' : 'No Image'}
+          <div className={styles.carouselContainer}>
+            <Swiper
+              modules={[Navigation, Pagination, Autoplay]}
+              spaceBetween={30}
+              slidesPerView={1}
+              navigation
+              pagination={{ clickable: true }}
+              autoplay={{ delay: 5000, disableOnInteraction: false }}
+              breakpoints={{
+                640: {
+                  slidesPerView: 1,
+                },
+                768: {
+                  slidesPerView: 2,
+                },
+                1024: {
+                  slidesPerView: 3,
+                },
+              }}
+              className={styles.swiper}
+            >
+              {vehicles.map((vehicle) => (
+                <SwiperSlide key={vehicle.id}>
+                  <div className={styles.vehicleCard}>
+                    <div className={styles.imageWrapper}>
+                      {vehicle.image ? (
+                        <>
+                          <img
+                            src={vehicle.image.startsWith('http') ? vehicle.image : vehicle.image}
+                            alt={vehicle.name}
+                            className={styles.vehicleImage}
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                          <div
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              background: '#1A1A1A',
+                              display: 'none',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#A0A0A0',
+                            }}
+                          >
+                            Image not available
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', background: '#1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A0A0A0' }}>
+                          No Image
+                        </div>
+                      )}
+                    </div>
+                    <div className={styles.content}>
+                      {vehicle.category && (
+                        <span className={styles.category}>{vehicle.category}</span>
+                      )}
+                      <h3 className={styles.name}>{vehicle.name}</h3>
+                      <div className={styles.specs}>
+                        <div className={styles.specItem}>
+                          <span>👥</span> {vehicle.passengers || 0}
+                        </div>
+                        <div className={styles.specItem}>
+                          <span>🧳</span> {vehicle.luggage || 0}
+                        </div>
+                      </div>
+                      {vehicle.rate > 0 && (
+                        <div style={{ marginTop: "0.5rem", marginBottom: "0.5rem" }}>
+                          <span style={{ fontSize: "20px", fontWeight: 700, color: "#D4AF37" }}>
+                            ${vehicle.rate.toFixed(2)}
+                          </span>
+                          <span style={{ fontSize: "14px", color: "#9ca3af", marginLeft: "4px" }}>CAD</span>
+                        </div>
+                      )}
+                      {vehicle.description && (
+                        <p className={styles.description}>{vehicle.description}</p>
+                      )}
+                      <button
+                        className={`btn-primary ${styles.bookBtn}`}
+                        onClick={() => handleBookNow(vehicle.name)}
+                      >
+                        Book Now
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div className={styles.content}>
-                  {vehicle.category && (
-                    <span className={styles.category}>{vehicle.category}</span>
-                  )}
-                  <h3 className={styles.name}>{vehicle.name}</h3>
-                  <div className={styles.specs}>
-                    <div className={styles.specItem}>
-                      <span>👥</span> {vehicle.passengers || 0}
-                    </div>
-                    <div className={styles.specItem}>
-                      <span>🧳</span> {vehicle.luggage || 0}
-                    </div>
-                  </div>
-                  {vehicle.rate > 0 && (
-                    <div style={{ marginTop: "0.5rem", marginBottom: "0.5rem" }}>
-                      <span style={{ fontSize: "20px", fontWeight: 700, color: "#D4AF37" }}>
-                        ${vehicle.rate.toFixed(2)}
-                      </span>
-                      <span style={{ fontSize: "14px", color: "#9ca3af", marginLeft: "4px" }}>CAD</span>
-                    </div>
-                  )}
-                  {vehicle.description && (
-                    <p className={styles.description}>{vehicle.description}</p>
-                  )}
-                  <button
-                    className={`btn-primary ${styles.bookBtn}`}
-                    onClick={() => handleBookNow(vehicle.name)}
-                  >
-                    Book Now
-                  </button>
-                </div>
-              </div>
-            ))}
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </div>
         )}
       </div>

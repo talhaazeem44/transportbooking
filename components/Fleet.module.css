@@ -22,10 +22,40 @@
     font-weight: 700;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2.5rem;
+.carouselContainer {
+    position: relative;
+    padding: 0 40px;
+}
+
+.swiper {
+    padding-bottom: 50px !important;
+}
+
+/* Custom Swiper Styles */
+:global(.swiper-button-next),
+:global(.swiper-button-prev) {
+    color: var(--accent) !important;
+    background: var(--secondary);
+    width: 45px !important;
+    height: 45px !important;
+    border-radius: 50%;
+    border: 1px solid var(--accent);
+}
+
+:global(.swiper-button-next:after),
+:global(.swiper-button-prev:after) {
+    font-size: 1.2rem !important;
+    font-weight: bold;
+}
+
+:global(.swiper-pagination-bullet) {
+    background: var(--text-muted) !important;
+    opacity: 0.5;
+}
+
+:global(.swiper-pagination-bullet-active) {
+    background: var(--accent) !important;
+    opacity: 1;
 }
 
 .vehicleCard {

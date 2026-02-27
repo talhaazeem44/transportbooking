@@ -1,5 +1,6 @@
 "use client";
 import React from 'react';
+import Link from 'next/link';
 import styles from './Hero.module.css';
 
 export default function Hero() {
@@ -17,7 +18,7 @@ export default function Hero() {
             From airport transfers to special events, we redefine sophisticated travel.
           </p>
           <div className={styles.heroActions}>
-            <button className={`btn-primary ${styles.heroBtn}`}>Instant Reservation</button>
+            <Link href="#book" className={`btn-primary ${styles.heroBtn}`}>Instant Reservation</Link>
             <button className={`btn-outline ${styles.heroBtn}`}>View Our Fleet</button>
           </div>
         </div>

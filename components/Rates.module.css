@@ -1,0 +1,183 @@
+.rates {
+    padding: 8rem 0;
+    background-color: var(--background);
+}
+
+.sectionHeader {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.sectionSubtitle {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.sectionTitle {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.sectionDesc {
+    color: var(--text-muted);
+    max-width: 600px;
+    margin: 0 auto;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.calculatorWrapper {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.searchBar {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.searchInput {
+    width: 100%;
+    padding: 1.2rem 1.5rem 1.2rem 3.5rem;
+    background: var(--secondary);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.searchInput:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(212, 175, 55, 0.05);
+}
+
+.searchIcon {
+    position: absolute;
+    left: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    opacity: 0.6;
+}
+
+.tableContainer {
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 3rem;
+}
+
+.ratesTable {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.ratesTable th {
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--accent);
+    padding: 1.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.ratesTable td {
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid var(--border-glass);
+    font-size: 1rem;
+}
+
+.ratesTable tr:last-child td {
+    border-bottom: none;
+}
+
+.ratesTable tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.cityName {
+    font-weight: 500;
+    color: var(--foreground);
+}
+
+.rateValue {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.noResults {
+    text-align: center;
+    padding: 3rem !important;
+    color: var(--text-muted);
+}
+
+.pricingNotes {
+    padding: 2rem;
+    background: var(--secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-glass);
+}
+
+.notesTitle {
+    color: var(--accent);
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    font-family: var(--font-serif);
+}
+
+.notesList {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.notesList li {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.notesList li::before {
+    content: "•";
+    color: var(--accent);
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+}
+
+.lastUpdated {
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-style: italic;
+    opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+    .sectionTitle {
+        font-size: 2.5rem;
+    }
+
+    .ratesTable th,
+    .ratesTable td {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .notesList {
+        grid-template-columns: 1fr;
+    }
+}
