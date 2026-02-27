@@ -24,9 +24,14 @@ Railway Dashboard → Project → Settings → Variables me add karo:
 CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
+CLOUDINARY_FOLDER=transportbooking/vehicles
 ```
 
-**Important:** Replace `your-cloud-name`, `your-api-key`, `your-api-secret` with apne actual credentials.
+**Important:** 
+- Replace `your-cloud-name`, `your-api-key`, `your-api-secret` with apne actual credentials
+- `CLOUDINARY_FOLDER` (optional) - Images ka folder name. Default: `transportbooking/vehicles`
+  - Example: `myapp/images`, `vehicles`, `transport/vehicles` - jo bhi chahe
+  - Cloudinary me yeh "folder" (bucket jaisa) organize karega images ko
 
 ## Step 4: Redeploy
 
