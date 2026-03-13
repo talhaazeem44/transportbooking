@@ -27,6 +27,15 @@ const ReservationSchema = new Schema(
     airline: { type: String, default: null, trim: true },
     flightNumber: { type: String, default: null, trim: true },
     message: { type: String, default: null, trim: true },
+    // Stripe payment fields
+    paymentStatus: {
+      type: String,
+      enum: ["PENDING", "PAID", "FAILED", "REFUNDED"],
+      default: "PENDING",
+    },
+    stripeSessionId: { type: String, default: null },
+    stripePaymentIntentId: { type: String, default: null },
+    amountPaid: { type: Number, default: 0 }, // in cents
   },
   { timestamps: true }
 );

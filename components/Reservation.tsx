@@ -9,7 +9,13 @@ interface ReservationProps {
   onClose?: () => void;
 }
 
-interface Option {
+interface VehicleOption {
+  id: string;
+  name: string;
+  rate?: number;
+}
+
+interface ServiceOption {
   id: string;
   name: string;
 }
@@ -19,8 +25,8 @@ export default function Reservation({
   isModal,
   onClose,
 }: ReservationProps) {
-  const [serviceTypes, setServiceTypes] = useState<Option[]>([]);
-  const [vehicles, setVehicles] = useState<Option[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<ServiceOption[]>([]);
+  const [vehicles, setVehicles] = useState<VehicleOption[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [submitState, setSubmitState] = useState<
     "idle" | "submitting" | "success" | "error"
@@ -67,10 +73,9 @@ export default function Reservation({
             serviceTypeId = sData.items[0].id;
           }
 
-          // If a vehicle was pre-selected from Fleet, try to map by name.
           if (selectedVehicle && vData.items?.length) {
             const match = vData.items.find(
-              (v: Option) =>
+              (v: VehicleOption) =>
                 v.name.toLowerCase() === selectedVehicle.toLowerCase()
             );
             if (match) {
@@ -93,14 +98,14 @@ export default function Reservation({
     load();
   }, [selectedVehicle]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const selectedVeh = vehicles.find(
+    (v) => v.id === formData.vehiclePreferenceId
+  );
+  const vehicleRate = selectedVeh?.rate || 0;
+
+  const handleSubmit = async (mode: "pay" | "quote") => {
     setSubmitState("submitting");
     setSubmitError(null);
-
-    // Debug: Log the time value being sent
-    console.log("[Reservation] Pickup Time value:", formData.pickupTime);
-    console.log("[Reservation] Pickup Date value:", formData.pickupDate);
 
     try {
       const payload = {
@@ -120,38 +125,51 @@ export default function Reservation({
         message: formData.message,
       };
 
-      console.log("[Reservation] Submitting payload:", payload);
-
-      const res = await fetch("/api/reservations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        // Show detailed validation errors if available
-        if (data.issues?.fieldErrors) {
-          const fieldErrors = Object.entries(data.issues.fieldErrors)
-            .map(([field, errors]: [string, any]) => {
-              const errorMsg = Array.isArray(errors) ? errors[0] : errors;
-              return `${field}: ${errorMsg}`;
-            })
-            .join(", ");
-          throw new Error(fieldErrors || data.error || "Failed to submit reservation");
+      if (mode === "pay") {
+        // Stripe Checkout flow
+        const res = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(
+            data.details?.join(", ") || data.error || "Payment failed"
+          );
         }
-        if (data.details && Array.isArray(data.details)) {
-          throw new Error(data.details.join(", "));
+        const { url } = await res.json();
+        if (url) {
+          window.location.href = url;
+        } else {
+          throw new Error("No checkout URL returned");
         }
-        throw new Error(data.error || "Failed to submit reservation");
-      }
-      setSubmitState("success");
-      setSubmitError(null);
-
-      // Auto-close modal after 3 seconds if it's a modal
-      if (isModal && onClose) {
-        setTimeout(() => {
-          onClose();
-        }, 3000);
+      } else {
+        // Quote-only flow (no payment)
+        const res = await fetch("/api/reservations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          if (data.issues?.fieldErrors) {
+            const fieldErrors = Object.entries(data.issues.fieldErrors)
+              .map(([field, errors]: [string, any]) => {
+                const errorMsg = Array.isArray(errors) ? errors[0] : errors;
+                return `${field}: ${errorMsg}`;
+              })
+              .join(", ");
+            throw new Error(fieldErrors || data.error || "Failed");
+          }
+          throw new Error(
+            data.details?.join(", ") || data.error || "Failed to submit"
+          );
+        }
+        setSubmitState("success");
+        if (isModal && onClose) {
+          setTimeout(() => onClose(), 3000);
+        }
       }
     } catch (err: any) {
       console.error(err);
@@ -160,7 +178,14 @@ export default function Reservation({
     }
   };
 
-  const isFormDisabled = submitState === "submitting" || submitState === "success" || loadingOptions;
+  const onFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Default submit = pay if rate exists, else quote
+    handleSubmit(vehicleRate > 0 ? "pay" : "quote");
+  };
+
+  const isFormDisabled =
+    submitState === "submitting" || submitState === "success" || loadingOptions;
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -181,31 +206,34 @@ export default function Reservation({
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          // Use reverse geocoding to get address from coordinates
-          // For now, using a placeholder or a free API if available
-          // Since we don't have a specific API key for reverse geocoding in env,
-          // we'll use the coordinates as a fallback or a simple message.
-          const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
+          const res = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+          );
           const data = await res.json();
           if (data.results && data.results[0]) {
-            setFormData(prev => ({ ...prev, pickupAddress: data.results[0].formatted_address }));
+            setFormData((prev) => ({
+              ...prev,
+              pickupAddress: data.results[0].formatted_address,
+            }));
           } else {
-            // Fallback for simple display if no key
-            setFormData(prev => ({ ...prev, pickupAddress: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` }));
+            setFormData((prev) => ({
+              ...prev,
+              pickupAddress: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+            }));
           }
-        } catch (error) {
-          console.error("Error geocoding:", error);
-          setFormData(prev => ({ ...prev, pickupAddress: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` }));
+        } catch {
+          setFormData((prev) => ({
+            ...prev,
+            pickupAddress: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+          }));
         }
       },
-      (error) => {
-        console.error("Geolocation error:", error);
+      () => {
         alert("Unable to retrieve your location");
       }
     );
   };
 
-  // Auto-locate on mount
   useEffect(() => {
     if (!formData.pickupAddress) {
       handleLocateMe();
@@ -213,13 +241,16 @@ export default function Reservation({
   }, []);
 
   const formContent = (
-    <div className={`${styles.formWrapper} ${isModal ? styles.modalContent : ""}`} style={{ position: "relative" }}>
+    <div
+      className={`${styles.formWrapper} ${isModal ? styles.modalContent : ""}`}
+      style={{ position: "relative" }}
+    >
       {isModal && submitState !== "submitting" && (
         <button className={styles.closeBtn} onClick={onClose}>
           &times;
         </button>
       )}
-      <form onSubmit={handleSubmit} style={{ position: "relative" }}>
+      <form onSubmit={onFormSubmit} style={{ position: "relative" }}>
         <div className={styles.grid}>
           {/* Passenger Information */}
           <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -292,6 +323,7 @@ export default function Reservation({
               {vehicles.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.name}
+                  {v.rate ? ` — CA$${v.rate.toFixed(2)}` : ""}
                 </option>
               ))}
             </select>
@@ -313,7 +345,12 @@ export default function Reservation({
           </div>
           <div className={styles.formGroup}>
             <label>Luggage / Bags</label>
-            <select name="bags" onChange={handleChange} value={formData.bags} disabled={isFormDisabled}>
+            <select
+              name="bags"
+              onChange={handleChange}
+              value={formData.bags}
+              disabled={isFormDisabled}
+            >
               {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
                 <option key={n} value={n}>
                   {n} {n === 1 ? "Bag" : "Bags"}
@@ -347,14 +384,20 @@ export default function Reservation({
               style={{
                 fontFamily: "monospace",
                 letterSpacing: "0.05em",
-                fontSize: "14px"
+                fontSize: "14px",
               }}
               placeholder="HH:mm"
-              title="24-hour format: Enter time as HH:mm (00:00 to 23:59). Examples: 09:00 (9 AM), 14:30 (2:30 PM), 23:59 (11:59 PM)"
+              title="24-hour format: HH:mm (00:00 to 23:59)"
             />
-            <small style={{ fontSize: 11, color: "#9ca3af", marginTop: 4, display: "block" }}>
-              ⏰ <strong>24-Hour Format Required:</strong> HH:mm (00:00 to 23:59)<br />
-              Examples: <code>09:00</code> = 9 AM, <code>14:30</code> = 2:30 PM, <code>23:59</code> = 11:59 PM
+            <small
+              style={{
+                fontSize: 11,
+                color: "#9ca3af",
+                marginTop: 4,
+                display: "block",
+              }}
+            >
+              24-Hour Format: HH:mm (e.g. 09:00 = 9 AM, 14:30 = 2:30 PM)
             </small>
           </div>
 
@@ -378,7 +421,7 @@ export default function Reservation({
                 title="Locate Me"
                 disabled={isFormDisabled}
               >
-                📍 Locate Me
+                Locate Me
               </button>
             </div>
           </div>
@@ -464,11 +507,18 @@ export default function Reservation({
                 marginBottom: "1.5rem",
               }}
             />
-            <div style={{ color: "#D4AF37", fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
-              Submitting Reservation...
+            <div
+              style={{
+                color: "#D4AF37",
+                fontSize: 18,
+                fontWeight: 600,
+                marginBottom: 8,
+              }}
+            >
+              Processing...
             </div>
             <div style={{ color: "#9ca3af", fontSize: 14 }}>
-              Please wait while we process your request
+              Please wait, you will be redirected shortly
             </div>
           </div>
         )}
@@ -490,12 +540,15 @@ export default function Reservation({
               gap: "0.75rem",
             }}
           >
-            <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+            <span style={{ fontSize: 18, flexShrink: 0 }}>!</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>Error submitting reservation</div>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                Error
+              </div>
               <div style={{ fontSize: 13, opacity: 0.9 }}>{submitError}</div>
             </div>
             <button
+              type="button"
               onClick={() => {
                 setSubmitError(null);
                 setSubmitState("idle");
@@ -511,12 +564,12 @@ export default function Reservation({
                 flexShrink: 0,
               }}
             >
-              ×
+              x
             </button>
           </div>
         )}
 
-        {/* Success Message */}
+        {/* Success Message (quote only) */}
         {submitState === "success" && (
           <div
             style={{
@@ -533,55 +586,235 @@ export default function Reservation({
               gap: "0.75rem",
             }}
           >
-            <span style={{ fontSize: 18, flexShrink: 0 }}>✅</span>
+            <span style={{ fontSize: 18, flexShrink: 0 }}>&#10003;</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>Reservation Request Submitted!</div>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                Reservation Request Submitted!
+              </div>
               <div style={{ fontSize: 13, opacity: 0.9 }}>
-                Thank you! We have received your reservation request. Our team will contact you shortly to confirm your booking.
+                Thank you! Our team will contact you shortly to confirm your
+                booking.
               </div>
             </div>
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={submitState === "submitting" || submitState === "success" || loadingOptions}
-          className={`btn-primary ${styles.submitBtn}`}
-          style={{
-            opacity: submitState === "submitting" || submitState === "success" || loadingOptions ? 0.6 : 1,
-            cursor: submitState === "submitting" || submitState === "success" || loadingOptions ? "not-allowed" : "pointer",
-            position: "relative",
-          }}
-        >
-          {submitState === "submitting" ? (
-            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              <span
+        {/* ─── Payment Section ─── */}
+        {vehicleRate > 0 && (
+          <div
+            style={{
+              background: "rgba(212, 175, 55, 0.06)",
+              border: "1px solid rgba(212, 175, 55, 0.25)",
+              borderRadius: 12,
+              padding: "1.5rem",
+              marginTop: "1.5rem",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1.25rem",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    color: "#9ca3af",
+                    fontSize: 12,
+                    textTransform: "uppercase",
+                    letterSpacing: 1,
+                    marginBottom: 4,
+                  }}
+                >
+                  {selectedVeh?.name}
+                </div>
+                <div
+                  style={{
+                    color: "#D4AF37",
+                    fontSize: 28,
+                    fontWeight: 700,
+                    lineHeight: 1,
+                  }}
+                >
+                  CA${vehicleRate.toFixed(2)}
+                </div>
+              </div>
+              <div
                 style={{
-                  width: 16,
-                  height: 16,
-                  border: "2px solid rgba(255,255,255,0.3)",
-                  borderTop: "2px solid #fff",
-                  borderRadius: "50%",
-                  display: "inline-block",
-                  animation: "spin 0.8s linear infinite",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  background: "rgba(99, 91, 255, 0.1)",
+                  border: "1px solid rgba(99, 91, 255, 0.25)",
+                  borderRadius: 6,
+                  padding: "6px 12px",
+                }}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#635BFF"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                  <line x1="1" y1="10" x2="23" y2="10" />
+                </svg>
+                <span style={{ color: "#635BFF", fontSize: 13, fontWeight: 600 }}>
+                  Stripe
+                </span>
+              </div>
+            </div>
+
+            {/* Pay Now Button */}
+            <button
+              type="submit"
+              disabled={isFormDisabled}
+              className={`btn-primary ${styles.submitBtn}`}
+              style={{
+                opacity: isFormDisabled ? 0.6 : 1,
+                cursor: isFormDisabled ? "not-allowed" : "pointer",
+                margin: 0,
+                background: "#635BFF",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+              }}
+            >
+              {submitState === "submitting" ? (
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 16,
+                      height: 16,
+                      border: "2px solid rgba(255,255,255,0.3)",
+                      borderTop: "2px solid #fff",
+                      borderRadius: "50%",
+                      display: "inline-block",
+                      animation: "spin 0.8s linear infinite",
+                    }}
+                  />
+                  Redirecting to Stripe...
+                </span>
+              ) : (
+                <>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect
+                      x="1"
+                      y="4"
+                      width="22"
+                      height="16"
+                      rx="2"
+                      ry="2"
+                    />
+                    <line x1="1" y1="10" x2="23" y2="10" />
+                  </svg>
+                  Pay CA${vehicleRate.toFixed(2)} &amp; Confirm Booking
+                </>
+              )}
+            </button>
+
+            {/* Divider */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "1rem",
+                margin: "1rem 0",
+              }}
+            >
+              <div
+                style={{
+                  flex: 1,
+                  height: 1,
+                  background: "rgba(255,255,255,0.1)",
                 }}
               />
-              Submitting...
-            </span>
-          ) : submitState === "success" ? (
-            "✓ Submitted Successfully"
-          ) : (
-            "Confirm Reservation Request"
-          )}
-        </button>
+              <span style={{ color: "#6b7280", fontSize: 12 }}>OR</span>
+              <div
+                style={{
+                  flex: 1,
+                  height: 1,
+                  background: "rgba(255,255,255,0.1)",
+                }}
+              />
+            </div>
 
-        <style dangerouslySetInnerHTML={{
-          __html: `
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        ` }} />
+            {/* Request Quote Button */}
+            <button
+              type="button"
+              disabled={isFormDisabled}
+              onClick={() => handleSubmit("quote")}
+              style={{
+                width: "100%",
+                padding: "0.9rem",
+                fontSize: "0.9rem",
+                letterSpacing: 1,
+                textTransform: "uppercase",
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 8,
+                color: "#9ca3af",
+                cursor: isFormDisabled ? "not-allowed" : "pointer",
+                opacity: isFormDisabled ? 0.6 : 1,
+                transition: "all 0.3s ease",
+              }}
+            >
+              Request Quote Without Payment
+            </button>
+          </div>
+        )}
+
+        {/* Fallback if no rate — just show quote button */}
+        {vehicleRate <= 0 && (
+          <button
+            type="submit"
+            disabled={isFormDisabled}
+            className={`btn-primary ${styles.submitBtn}`}
+            style={{
+              opacity: isFormDisabled ? 0.6 : 1,
+              cursor: isFormDisabled ? "not-allowed" : "pointer",
+            }}
+          >
+            {submitState === "submitting"
+              ? "Submitting..."
+              : submitState === "success"
+                ? "Submitted"
+                : "Request Reservation Quote"}
+          </button>
+        )}
+
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `,
+          }}
+        />
       </form>
       <div className={styles.mapSide}>
         <h3 className={styles.mapTitle}>Pickup Location Preview</h3>
@@ -599,11 +832,12 @@ export default function Reservation({
       <div className="container">
         <div className={styles.sectionHeader}>
           <span className={styles.sectionSubtitle}>Reserve Now</span>
-          <h2 className={styles.sectionTitle}>Book Your Premium Experience</h2>
+          <h2 className={styles.sectionTitle}>
+            Book Your Premium Experience
+          </h2>
         </div>
         {formContent}
       </div>
     </section>
   );
 }
-
