@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./Reservation.module.css";
 import Map from "./Map";
+import { ratesData } from "@/lib/ratesData";
 
 interface ReservationProps {
   selectedVehicle?: string;
@@ -12,7 +13,9 @@ interface ReservationProps {
 interface VehicleOption {
   id: string;
   name: string;
+  image?: string;
   rate?: number;
+  category?: string;
 }
 
 interface ServiceOption {
@@ -43,6 +46,7 @@ export default function Reservation({
     bags: "1",
     pickupDate: "",
     pickupTime: "",
+    city: "",
     pickupAddress: "",
     airline: "",
     flightNumber: "",
@@ -101,7 +105,31 @@ export default function Reservation({
   const selectedVeh = vehicles.find(
     (v) => v.id === formData.vehiclePreferenceId
   );
-  const vehicleRate = selectedVeh?.rate || 0;
+  
+  // Calculate base rate dynamically based on selected city (if any)
+  let baseRate = selectedVeh?.rate || 0;
+  
+  if (formData.city && selectedVeh) {
+    const cityData = ratesData.find(c => c.city === formData.city);
+    if (cityData) {
+      const isLimoOrSuv = selectedVeh.name.toLowerCase().includes("suv") || 
+                          selectedVeh.name.toLowerCase().includes("limo") || 
+                          selectedVeh.name.toLowerCase().includes("sprinter");
+      
+      const cityRate = isLimoOrSuv ? cityData.limo : cityData.taxi;
+      if (cityRate) {
+        baseRate = cityRate;
+      }
+    }
+  }
+
+  // Calculate specific surcharges
+  const fuelSurcharge = baseRate * 0.05;
+  const hst = baseRate * 0.13;
+  const gratuity = baseRate * 0.15;
+  
+  // Total
+  const totalRate = baseRate + fuelSurcharge + hst + gratuity;
 
   const handleSubmit = async (mode: "pay" | "quote") => {
     setSubmitState("submitting");
@@ -118,6 +146,7 @@ export default function Reservation({
         bags: Number(formData.bags),
         pickupDate: formData.pickupDate,
         pickupTime: formData.pickupTime,
+        city: formData.city,
         pickupAddress: formData.pickupAddress,
         airline: formData.airline,
         flightNumber: formData.flightNumber,
@@ -181,7 +210,7 @@ export default function Reservation({
   const onFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Default submit = pay if rate exists, else quote
-    handleSubmit(vehicleRate > 0 ? "pay" : "quote");
+    handleSubmit(baseRate > 0 ? "pay" : "quote");
   };
 
   const isFormDisabled =
@@ -251,6 +280,18 @@ export default function Reservation({
         </button>
       )}
       <form onSubmit={onFormSubmit} style={{ position: "relative" }}>
+        
+        {/* Vehicle Image Preview */}
+        {selectedVeh?.image && (
+          <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+            <img 
+              src={selectedVeh.image} 
+              alt={selectedVeh.name} 
+              style={{ maxWidth: "100%", maxHeight: "250px", objectFit: "contain", filter: "drop-shadow(0 10px 15px rgba(0,0,0,0.1))" }} 
+            />
+          </div>
+        )}
+
         <div className={styles.grid}>
           {/* Passenger Information */}
           <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -320,12 +361,31 @@ export default function Reservation({
               value={formData.vehiclePreferenceId}
               disabled={isFormDisabled}
             >
-              {vehicles.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                  {v.rate ? ` — CA$${v.rate.toFixed(2)}` : ""}
-                </option>
-              ))}
+              {vehicles.map((v) => {
+                let displayRate = v.rate || 0;
+                
+                // If a city is selected, we must show the flat airport rate for this specific vehicle category
+                if (formData.city) {
+                  const cityData = ratesData.find(c => c.city === formData.city);
+                  if (cityData) {
+                    const isPremium = v.name.toLowerCase().includes("suv") || 
+                                      v.name.toLowerCase().includes("limo") || 
+                                      v.name.toLowerCase().includes("sprinter") ||
+                                      (v.category && v.category.toLowerCase().includes("business")) ||
+                                      (v.category && v.category.toLowerCase().includes("elite"));
+                    
+                    const cityRate = isPremium ? cityData.limo : cityData.taxi;
+                    if (cityRate) displayRate = cityRate;
+                  }
+                }
+
+                return (
+                  <option key={v.id} value={v.id}>
+                    {v.name}
+                    {displayRate > 0 ? ` — CA$${displayRate.toFixed(2)} Base` : ""}
+                  </option>
+                );
+              })}
             </select>
           </div>
           <div className={styles.formGroup}>
@@ -369,6 +429,7 @@ export default function Reservation({
               onChange={handleChange}
               value={formData.pickupDate}
               disabled={isFormDisabled}
+              style={{ colorScheme: "dark" }}
             />
           </div>
           <div className={styles.formGroup}>
@@ -385,6 +446,7 @@ export default function Reservation({
                 fontFamily: "monospace",
                 letterSpacing: "0.05em",
                 fontSize: "14px",
+                colorScheme: "dark",
               }}
               placeholder="HH:mm"
               title="24-hour format: HH:mm (00:00 to 23:59)"
@@ -398,6 +460,26 @@ export default function Reservation({
               }}
             >
               24-Hour Format: HH:mm (e.g. 09:00 = 9 AM, 14:30 = 2:30 PM)
+            </small>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label>City / Municipality (For Airport Transfers)</label>
+            <select
+              name="city"
+              onChange={handleChange}
+              value={formData.city}
+              disabled={isFormDisabled}
+            >
+              <option value="">Select a City (Optional)</option>
+              {ratesData.map(r => (
+                <option key={r.city} value={r.city}>
+                  {r.city}
+                </option>
+              ))}
+            </select>
+            <small style={{ fontSize: 11, color: "#9ca3af", marginTop: 4, display: "block" }}>
+              Select your city to see exact airport transfer rates.
             </small>
           </div>
 
@@ -600,7 +682,7 @@ export default function Reservation({
         )}
 
         {/* ─── Payment Section ─── */}
-        {vehicleRate > 0 && (
+        {baseRate > 0 && (
           <div
             style={{
               background: "rgba(212, 175, 55, 0.06)",
@@ -628,7 +710,7 @@ export default function Reservation({
                     marginBottom: 4,
                   }}
                 >
-                  {selectedVeh?.name}
+                  {selectedVeh?.name} (Total Fare)
                 </div>
                 <div
                   style={{
@@ -636,9 +718,20 @@ export default function Reservation({
                     fontSize: 28,
                     fontWeight: 700,
                     lineHeight: 1,
+                    marginBottom: 8,
                   }}
                 >
-                  CA${vehicleRate.toFixed(2)}
+                  CA${totalRate.toFixed(2)}
+                </div>
+                <div
+                  style={{
+                    color: "#9ca3af",
+                    fontSize: 13,
+                    fontStyle: "italic",
+                    maxWidth: "350px",
+                  }}
+                >
+                  (Base Rate: ${baseRate.toFixed(2)} + 5% Fuel Surcharge + 13% HST + 15% Driver Gratuity)
                 </div>
               </div>
               <div
@@ -730,7 +823,7 @@ export default function Reservation({
                     />
                     <line x1="1" y1="10" x2="23" y2="10" />
                   </svg>
-                  Pay CA${vehicleRate.toFixed(2)} &amp; Confirm Booking
+                  Pay CA${totalRate.toFixed(2)} &amp; Confirm Booking
                 </>
               )}
             </button>
@@ -787,7 +880,7 @@ export default function Reservation({
         )}
 
         {/* Fallback if no rate — just show quote button */}
-        {vehicleRate <= 0 && (
+        {baseRate <= 0 && (
           <button
             type="submit"
             disabled={isFormDisabled}

@@ -1,5 +1,6 @@
 import { dbConnect } from "@/lib/mongodb";
 import { stripe } from "@/lib/stripe";
+import { ratesData } from "@/lib/ratesData";
 import { createReservationSchema, toPickupAt } from "@/lib/validation";
 import { NextResponse } from "next/server";
 import { Reservation } from "@/models/Reservation";
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
     ).lean(),
     VehiclePreference.findOne(
       { _id: payload.vehiclePreferenceId } as any,
-      { name: 1, rate: 1 } as any
+      { name: 1, rate: 1, category: 1 } as any
     ).lean(),
   ]);
 
@@ -45,13 +46,38 @@ export async function POST(req: Request) {
     );
   }
 
-  const rate = (vehiclePreference as any).rate || 0;
-  if (rate <= 0) {
+  // Determine base rate
+  let baseRate = (vehiclePreference as any).rate || 0;
+  
+  if (payload.city) {
+    const cityData = ratesData.find(c => c.city === payload.city);
+    if (cityData) {
+      const vPref = vehiclePreference as any;
+      const isPremium = vPref.name.toLowerCase().includes("suv") || 
+                        vPref.name.toLowerCase().includes("limo") || 
+                        vPref.name.toLowerCase().includes("sprinter") ||
+                        (vPref.category && vPref.category.toLowerCase().includes("business")) ||
+                        (vPref.category && vPref.category.toLowerCase().includes("elite"));
+      
+      const cityRate = isPremium ? cityData.limo : cityData.taxi;
+      if (cityRate) {
+        baseRate = cityRate;
+      }
+    }
+  }
+
+  if (baseRate <= 0) {
     return NextResponse.json(
       { error: "This vehicle does not have a price set. Please contact us." },
       { status: 400 }
     );
   }
+  
+  // Calculate total with surcharges to match frontend
+  const fuelSurcharge = baseRate * 0.05;
+  const hst = baseRate * 0.13;
+  const gratuity = baseRate * 0.15;
+  const totalRate = baseRate + fuelSurcharge + hst + gratuity;
 
   // Create reservation with PENDING payment status
   const created = await Reservation.create({
@@ -63,6 +89,7 @@ export async function POST(req: Request) {
     passengers: payload.passengers,
     bags: payload.bags,
     pickupAt,
+    city: payload.city || null,
     pickupAddress: payload.pickupAddress,
     destinationAddress: payload.destinationAddress,
     airline: payload.airline || null,
@@ -71,7 +98,7 @@ export async function POST(req: Request) {
     paymentStatus: "PENDING",
   });
 
-  const amountInCents = Math.round(rate * 100);
+  const amountInCents = Math.round(totalRate * 100);
 
   // Create Stripe Checkout Session
   const session = await stripe.checkout.sessions.create({

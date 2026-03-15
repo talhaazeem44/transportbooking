@@ -1,27 +1,8 @@
 "use client";
 import React, { useState } from 'react';
 import styles from './Rates.module.css';
+import { ratesData } from '@/lib/ratesData';
 
-const ratesData = [
-    { city: "Toronto (Downtown)", sedan: 60, suv: 95 },
-    { city: "Mississauga", sedan: 55, suv: 90 },
-    { city: "Brampton", sedan: 60, suv: 95 },
-    { city: "Oakville", sedan: 75, suv: 110 },
-    { city: "Burlington", sedan: 95, suv: 130 },
-    { city: "Hamilton", sedan: 125, suv: 165 },
-    { city: "Markham", sedan: 70, suv: 105 },
-    { city: "Richmond Hill", sedan: 75, suv: 110 },
-    { city: "Vaughan", sedan: 65, suv: 100 },
-    { city: "Whitby", sedan: 110, suv: 150 },
-    { city: "Oshawa", sedan: 120, suv: 160 },
-    { city: "Ajax", sedan: 100, suv: 140 },
-    { city: "Pickering", sedan: 90, suv: 130 },
-    { city: "Milton", sedan: 85, suv: 120 },
-    { city: "Newmarket", sedan: 105, suv: 145 },
-    { city: "Aurora", sedan: 95, suv: 135 },
-    { city: "Niagara Falls", sedan: 195, suv: 250 },
-    { city: "Buffalo Airport", sedan: 225, suv: 295 }
-];
 
 export default function Rates() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -59,8 +40,8 @@ export default function Rates() {
                             <thead>
                                 <tr>
                                     <th>City / Area</th>
-                                    <th>Luxury Sedan</th>
-                                    <th>Executive SUV</th>
+                                    <th>Taxi Rate</th>
+                                    <th>Limo Rate</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -68,8 +49,8 @@ export default function Rates() {
                                     filteredRates.map((rate, index) => (
                                         <tr key={index}>
                                             <td className={styles.cityName}>{rate.city}</td>
-                                            <td className={styles.rateValue}>${rate.sedan}</td>
-                                            <td className={styles.rateValue}>${rate.suv}</td>
+                                            <td className={styles.rateValue}>{rate.taxi ? `$${rate.taxi}` : 'N/A'}</td>
+                                            <td className={styles.rateValue}>{rate.limo ? `$${rate.limo}` : 'N/A'}</td>
                                         </tr>
                                     ))
                                 ) : (
@@ -84,17 +65,17 @@ export default function Rates() {
                     </div>
 
                     <div className={styles.pricingNotes}>
-                        <h4 className={styles.notesTitle}>Important Pricing Information:</h4>
+                        <h4 className={styles.notesTitle}>Important Pricing Information (Effective Feb 2024):</h4>
                         <ul className={styles.notesList}>
-                            <li>Rates are for <strong>one-way</strong> travel <strong>per vehicle</strong>.</li>
-                            <li>Toll Highway 407 ETR: Additional $15.00</li>
-                            <li>Child Safety Seats: Additional $15.00 each</li>
-                            <li>Extra Stops: $15.00 (within same city)</li>
-                            <li>All rates are subject to 5% Fuel Surcharge</li>
-                            <li>All rates are subject to 13% HST (Government Tax)</li>
-                            <li>Reservations are subject to 15% Driver Gratuity</li>
+                            <li>Rates are for <strong>one-way</strong> travel <strong>per vehicle</strong> to/from Pearson International Airport.</li>
+                            <li><strong>407 Tolls:</strong> If requested, applicable toll fees will be added to the fare.</li>
+                            <li><strong>Wait Time:</strong> $10.00 for each 10 minutes or part thereof.</li>
+                            <li><strong>Multiple Drop-offs:</strong> Additional $15.00 for each passenger dropped off on route.</li>
+                            <li><strong>Extra Passenger/Excess Baggage:</strong> A $15.00 surcharge applies to transport more than 4 passengers and/or excess baggage.</li>
+                            <li><strong>Outside Zone Rate:</strong> Taxi: $1.90/km, Limo: $2.01/km.</li>
+                            <li>All rates are subject to 13% HST (Government Tax).</li>
                         </ul>
-                        <p className={styles.lastUpdated}>* Rates are subject to change without notice.</p>
+                        <p className={styles.lastUpdated}>* Rates are out-of-town tariffs established by the Greater Toronto Airports Authority.</p>
                     </div>
                 </div>
             </div>

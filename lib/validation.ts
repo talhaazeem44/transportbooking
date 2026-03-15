@@ -7,6 +7,7 @@ export const createReservationSchema = z.object({
 
   serviceTypeId: z.string().min(1),
   vehiclePreferenceId: z.string().min(1),
+  city: z.string().optional(),
 
   passengers: z.coerce.number().int().min(1).max(50),
   bags: z.coerce.number().int().min(0).max(50),

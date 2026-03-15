@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Rates from "@/components/Rates";
 import Footer from "@/components/Footer";
 import Reservation from "@/components/Reservation";
+import RateCalculator from "@/components/RateCalculator";
 
 export const metadata = {
     title: "Service Rates | Toronto Airport Limousine",
@@ -13,9 +14,12 @@ export default function RatesPage() {
         <main>
             <Navbar />
             <div style={{ paddingTop: '80px' }}> {/* Adjust for fixed navbar height */}
+                <RateCalculator />
                 <Rates />
             </div>
-            <Reservation />
+            <div id="reservation-section">
+                <Reservation />
+            </div>
             <Footer />
         </main>
     );

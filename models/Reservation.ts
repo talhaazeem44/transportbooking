@@ -22,6 +22,7 @@ const ReservationSchema = new Schema(
     passengers: { type: Number, required: true },
     bags: { type: Number, required: true },
     pickupAt: { type: Date, required: true },
+    city: { type: String, default: null, trim: true },
     pickupAddress: { type: String, required: true, trim: true },
     destinationAddress: { type: String, required: true, trim: true },
     airline: { type: String, default: null, trim: true },

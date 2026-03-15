@@ -7,13 +7,13 @@ const services = [
         title: "Airport Transfers",
         description: "Punctual and stress-free rides to and from Pearson International, Billy Bishop, and more.",
         icon: "✈️",
-        image: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5947?q=80&w=2070&auto=format&fit=crop"
+        image: "https://images.unsplash.com/photo-1676107648535-931375db52e2?q=80&w=2070&auto=format&fit=crop"
     },
     {
         title: "Corporate Excellence",
         description: "Professional chauffeur services for executives and business travelers who value time and comfort.",
         icon: "💼",
-        image: "https://images.unsplash.com/photo-1511210352396-54a060633c32?q=80&w=2114&auto=format&fit=crop"
+        image: "https://images.unsplash.com/photo-1547731269-e4073e054f12?q=80&w=2114&auto=format&fit=crop"
     },
     {
         title: "Weddings & Galas",
@@ -31,7 +31,7 @@ const services = [
         title: "Casino Expeditions",
         description: "Unmatched style for your trips to Fallsview, Casino Rama, and other regional hotspots.",
         icon: "🎰",
-        image: "https://images.unsplash.com/photo-1596838132731-160100f3c58a?q=80&w=2070&auto=format&fit=crop"
+        image: "https://images.unsplash.com/photo-1680516059579-fc0e573f9004?q=80&w=2070&auto=format&fit=crop"
     },
     {
         title: "Special Ocassions",
