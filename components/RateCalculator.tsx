@@ -1,6 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
-import { ratesData } from "@/lib/ratesData";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 interface VehicleOption {
   id: string;
@@ -11,12 +10,34 @@ interface VehicleOption {
   bags?: number;
 }
 
+interface CompareEntry {
+  carType: string;
+  tariff: number;
+  maxPassengers: number;
+  total: number;
+}
+
+interface AirportOption {
+  id: string;
+  name: string;
+  code: string;
+}
+
 export default function RateCalculator() {
   const [vehicles, setVehicles] = useState<VehicleOption[]>([]);
+  const [airportsList, setAirportsList] = useState<AirportOption[]>([]);
+  const [allDestinations, setAllDestinations] = useState<string[]>([]);
+  const [loadingCities, setLoadingCities] = useState(true);
+  const [citySearch, setCitySearch] = useState("");
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [selectedCity, setSelectedCity] = useState("");
-  const [selectedAirport, setSelectedAirport] = useState("Toronto Pearson Airport (YYZ)");
+  const [selectedAirport, setSelectedAirport] = useState("");
+  const [airportSearch, setAirportSearch] = useState("");
+  const [showAirportDropdown, setShowAirportDropdown] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState("");
-  const [direction, setDirection] = useState("to"); // "to" or "from"
+  const [vehicleSearch, setVehicleSearch] = useState("");
+  const [showVehicleDropdown, setShowVehicleDropdown] = useState(false);
+  const [direction, setDirection] = useState("to");
   const [calculatedRate, setCalculatedRate] = useState<{
     base: number;
     total: number;
@@ -24,70 +45,159 @@ export default function RateCalculator() {
     hst: number;
     gratuity: number;
   } | null>(null);
+  const [compareRates, setCompareRates] = useState<CompareEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(50);
+  const cityDropdownRef = useRef<HTMLDivElement>(null);
+  const airportDropdownRef = useRef<HTMLDivElement>(null);
+  const vehicleDropdownRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
+  // Load vehicles + airports
   useEffect(() => {
-    const loadVehicles = async () => {
+    const loadData = async () => {
       try {
-        const res = await fetch("/api/vehicles");
-        const data = await res.json();
-        setVehicles(data.items || []);
+        const [vRes, aRes] = await Promise.all([
+          fetch("/api/vehicles"),
+          fetch("/api/airports"),
+        ]);
+        const vData = await vRes.json();
+        setVehicles(vData.items || []);
+        if (aRes.ok) {
+          const aData = await aRes.json();
+          setAirportsList(Array.isArray(aData) ? aData : []);
+        }
       } catch (e) {
-        console.error("Failed to load vehicles", e);
+        console.error("Failed to load data", e);
       }
     };
-    loadVehicles();
+    loadData();
   }, []);
 
-  const handleGetRates = () => {
+  // Load cities when airport changes
+  useEffect(() => {
+    const airportCode = selectedAirport || "YYZ";
+    const loadCities = async () => {
+      setLoadingCities(true);
+      try {
+        const res = await fetch(`/api/rates/destinations/all?airport=${encodeURIComponent(airportCode)}`);
+        const data = await res.json();
+        setAllDestinations(Array.isArray(data) ? data : []);
+      } catch {
+        setAllDestinations([]);
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+    loadCities();
+    setCalculatedRate(null);
+    setCompareRates([]);
+  }, [selectedAirport]);
+
+  const airportOptions = useMemo(() =>
+    airportsList.map((a) => ({ value: a.code, label: `${a.code} – ${a.name}` })),
+    [airportsList]
+  );
+
+  const filteredAirports = airportOptions.filter((a) =>
+    a.label.toLowerCase().includes(airportSearch.toLowerCase())
+  );
+
+  const filteredVehicles = vehicles.filter((v) =>
+    v.name.toLowerCase().includes(vehicleSearch.toLowerCase())
+  );
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(e.target as Node)) setShowCityDropdown(false);
+      if (airportDropdownRef.current && !airportDropdownRef.current.contains(e.target as Node)) setShowAirportDropdown(false);
+      if (vehicleDropdownRef.current && !vehicleDropdownRef.current.contains(e.target as Node)) setShowVehicleDropdown(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  // Filter cities by search
+  const filteredCities = allDestinations.filter((c) =>
+    c.toLowerCase().includes(citySearch.toLowerCase())
+  );
+  const visibleCities = filteredCities.slice(0, visibleCount);
+
+  // Lazy load more on scroll
+  const handleScroll = () => {
+    if (!listRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+    if (scrollTop + clientHeight >= scrollHeight - 20) {
+      setVisibleCount((prev) => Math.min(prev + 50, filteredCities.length));
+    }
+  };
+
+  // Reset visible count on search change
+  useEffect(() => {
+    setVisibleCount(50);
+  }, [citySearch]);
+
+  const selectCity = (city: string) => {
+    setSelectedCity(city);
+    setCitySearch(city);
+    setShowCityDropdown(false);
+    setCalculatedRate(null);
+    setCompareRates([]);
+  };
+
+  const handleGetRates = async () => {
     setError(null);
+    setCalculatedRate(null);
+    setCompareRates([]);
+
     if (!selectedCity || !selectedVehicle) {
-      setError("Please select a City and a Vehicle first.");
+      setError("Please select a City and Vehicle first.");
       return;
     }
 
-    // Find city rate
-    const cityData = ratesData.find(c => c.city === selectedCity);
-    if (!cityData) {
-      setError("Rate not found for this city. Please call us.");
-      return;
+    const airportCode = selectedAirport || "YYZ";
+    try {
+      const res = await fetch(`/api/rates/lookup?carType=${encodeURIComponent(selectedVehicle)}&destination=${encodeURIComponent(selectedCity)}&airport=${encodeURIComponent(airportCode)}`);
+      if (!res.ok) {
+        setError("Rate not found for this combination. Please contact us.");
+        return;
+      }
+      const data = await res.json();
+      const baseRate = data.tariff;
+      const fuel = baseRate * 0.05;
+      const hst = baseRate * 0.13;
+      const gratuity = baseRate * 0.15;
+      const total = baseRate + fuel + hst + gratuity;
+      setCalculatedRate({ base: baseRate, total, fuel, hst, gratuity });
+
+      const cRes = await fetch(`/api/rates/compare?destination=${encodeURIComponent(selectedCity)}&airport=${encodeURIComponent(airportCode)}`);
+      if (cRes.ok) {
+        const cData = await cRes.json();
+        setCompareRates(Array.isArray(cData) ? cData : []);
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
     }
-
-    // Premium/limo-tier vehicles use cityData.limo, standard use cityData.taxi
-    const vehLower = selectedVehicle.toLowerCase();
-    const premiumKeywords = [
-      "suv", "limo", "limousine", "sprinter", "stretch", "van",
-      "executive", "luxury", "premium", "business", "elite",
-      "escalade", "navigator", "suburban", "mercedes", "bmw",
-      "cadillac", "lincoln",
-    ];
-    const isLimoTier = premiumKeywords.some(k => vehLower.includes(k));
-    const baseRate = isLimoTier ? cityData.limo : cityData.taxi;
-
-    if (!baseRate) {
-      setError("Rate not available for this combination. Please contact us.");
-      return;
-    }
-
-    const fuel = baseRate * 0.05;
-    const hst = baseRate * 0.13;
-    const gratuity = baseRate * 0.15;
-    const total = baseRate + fuel + hst + gratuity;
-
-    setCalculatedRate({
-      base: baseRate,
-      total,
-      fuel,
-      hst,
-      gratuity
-    });
   };
 
   const scrollToReservation = () => {
     const el = document.getElementById("reservation-section");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const otherVehicles = compareRates.filter((cr) => cr.carType !== selectedVehicle);
+
+  const selectStyle: React.CSSProperties = {
+    padding: "0.75rem",
+    border: "none",
+    borderBottom: "1px solid rgba(255,255,255,0.2)",
+    backgroundColor: "#111827",
+    fontSize: "1rem",
+    color: "#f9fafb",
+    outline: "none",
+    cursor: "pointer",
+    width: "100%",
   };
 
   return (
@@ -112,51 +222,167 @@ export default function RateCalculator() {
       <div style={{ backgroundColor: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.1)", padding: "2rem", borderRadius: "8px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem", paddingBottom: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)", marginBottom: "1.5rem" }}>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          {/* 1. City — searchable with lazy loading */}
+          <div style={{ display: "flex", flexDirection: "column" }} ref={cityDropdownRef}>
             <label style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "0.5rem" }}>City</label>
-            <select
-              value={selectedCity}
-              onChange={(e) => setSelectedCity(e.target.value)}
-              style={{ padding: "0.75rem", border: "none", borderBottom: "1px solid rgba(255,255,255,0.2)", backgroundColor: "#111827", fontSize: "1rem", color: "#f9fafb", outline: "none", cursor: "pointer" }}
-            >
-              <option value="">Select your City</option>
-              {ratesData.map(r => (
-                <option key={r.city} value={r.city}>{r.city}</option>
-              ))}
-            </select>
+            <div style={{ position: "relative" }}>
+              <input
+                type="text"
+                placeholder={loadingCities ? "Loading cities..." : "Type to search city..."}
+                value={showCityDropdown ? citySearch : selectedCity || citySearch}
+                onChange={(e) => {
+                  setCitySearch(e.target.value);
+                  setSelectedCity("");
+                  setShowCityDropdown(true);
+                }}
+                onFocus={() => { setShowCityDropdown(true); setCitySearch(""); }}
+                disabled={loadingCities}
+                autoComplete="off"
+                style={{
+                  ...selectStyle,
+                  cursor: loadingCities ? "wait" : "text",
+                  color: loadingCities ? "#6b7280" : "#f9fafb",
+                }}
+              />
+              {showCityDropdown && !loadingCities && (
+                <div
+                  ref={listRef}
+                  onScroll={handleScroll}
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    maxHeight: 250,
+                    overflowY: "auto",
+                    background: "#1f2937",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    borderRadius: "0 0 6px 6px",
+                    zIndex: 999,
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                  }}
+                >
+                  {visibleCities.length === 0 ? (
+                    <div style={{ padding: "0.75rem 1rem", color: "#9ca3af", fontSize: 14 }}>
+                      No cities found for "{citySearch}"
+                    </div>
+                  ) : (
+                    visibleCities.map((city) => (
+                      <div
+                        key={city}
+                        onMouseDown={(e) => { e.preventDefault(); selectCity(city); }}
+                        style={{
+                          padding: "0.6rem 1rem",
+                          cursor: "pointer",
+                          fontSize: 14,
+                          color: "#e5e7eb",
+                          borderBottom: "1px solid rgba(255,255,255,0.05)",
+                          transition: "background 0.1s",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(212,175,55,0.1)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                      >
+                        {city}
+                      </div>
+                    ))
+                  )}
+                  {visibleCities.length < filteredCities.length && (
+                    <div style={{ padding: "0.5rem 1rem", color: "#6b7280", fontSize: 12, textAlign: "center" }}>
+                      Scroll for more... ({filteredCities.length - visibleCities.length} remaining)
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          {/* 2. Airport */}
+          <div style={{ display: "flex", flexDirection: "column" }} ref={airportDropdownRef}>
             <label style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "0.5rem" }}>Airport</label>
-            <select
-              value={selectedAirport}
-              onChange={(e) => setSelectedAirport(e.target.value)}
-              style={{ padding: "0.75rem", border: "none", borderBottom: "1px solid rgba(255,255,255,0.2)", backgroundColor: "#111827", fontSize: "1rem", color: "#f9fafb", outline: "none", cursor: "pointer" }}
-            >
-              <option value="Toronto Pearson Airport (YYZ)">YYZ – Toronto Pearson International</option>
-              <option value="Billy Bishop Airport (YTZ)">YTZ – Billy Bishop Toronto City</option>
-              <option value="Downsview Airport (YZD)">YZD – Downsview Airport</option>
-              <option value="John C. Munro Hamilton (YHM)">YHM – John C. Munro Hamilton</option>
-              <option value="Buffalo Niagara Airport (BUF)">BUF – Buffalo Niagara International</option>
-              <option value="Niagara Falls Airport (IAG)">IAG – Niagara Falls International</option>
-            </select>
+            <div style={{ position: "relative" }}>
+              <input
+                type="text"
+                placeholder="Search airport..."
+                value={showAirportDropdown ? airportSearch : (airportOptions.find(a => a.value === selectedAirport)?.label || airportSearch)}
+                onChange={(e) => { setAirportSearch(e.target.value); setSelectedAirport(""); setShowAirportDropdown(true); }}
+                onFocus={() => { setShowAirportDropdown(true); setAirportSearch(""); }}
+                autoComplete="off"
+                style={selectStyle}
+              />
+              {showAirportDropdown && (
+                <div style={{
+                  position: "absolute", top: "100%", left: 0, right: 0, maxHeight: 250, overflowY: "auto",
+                  background: "#1f2937", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0 0 6px 6px",
+                  zIndex: 999, boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                }}>
+                  {filteredAirports.length === 0 ? (
+                    <div style={{ padding: "0.75rem 1rem", color: "#9ca3af", fontSize: 14 }}>No airports found</div>
+                  ) : (
+                    filteredAirports.map((a) => (
+                      <div
+                        key={a.value}
+                        onMouseDown={(e) => { e.preventDefault(); setSelectedAirport(a.value); setAirportSearch(a.label); setShowAirportDropdown(false); }}
+                        style={{ padding: "0.6rem 1rem", cursor: "pointer", fontSize: 14, color: "#e5e7eb", borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.1s" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(212,175,55,0.1)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                      >
+                        {a.label}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          {/* 3. Vehicle */}
+          <div style={{ display: "flex", flexDirection: "column" }} ref={vehicleDropdownRef}>
             <label style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "0.5rem" }}>Vehicle</label>
-            <select
-              value={selectedVehicle}
-              onChange={(e) => setSelectedVehicle(e.target.value)}
-              style={{ padding: "0.75rem", border: "none", borderBottom: "1px solid rgba(255,255,255,0.2)", backgroundColor: "#111827", fontSize: "1rem", color: "#f9fafb", outline: "none", cursor: "pointer" }}
-            >
-              <option value="">Select your Vehicle</option>
-              {vehicles.map(v => (
-                <option key={v.id} value={v.name}>{v.name}</option>
-              ))}
-            </select>
+            <div style={{ position: "relative" }}>
+              <input
+                type="text"
+                placeholder="Search vehicle..."
+                value={showVehicleDropdown ? vehicleSearch : selectedVehicle || vehicleSearch}
+                onChange={(e) => { setVehicleSearch(e.target.value); setSelectedVehicle(""); setShowVehicleDropdown(true); }}
+                onFocus={() => { setShowVehicleDropdown(true); setVehicleSearch(""); }}
+                autoComplete="off"
+                style={selectStyle}
+              />
+              {showVehicleDropdown && (
+                <div style={{
+                  position: "absolute", top: "100%", left: 0, right: 0, maxHeight: 250, overflowY: "auto",
+                  background: "#1f2937", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0 0 6px 6px",
+                  zIndex: 999, boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                }}>
+                  {filteredVehicles.length === 0 ? (
+                    <div style={{ padding: "0.75rem 1rem", color: "#9ca3af", fontSize: 14 }}>No vehicles found</div>
+                  ) : (
+                    filteredVehicles.map((v) => (
+                      <div
+                        key={v.id}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setSelectedVehicle(v.name);
+                          setVehicleSearch(v.name);
+                          setShowVehicleDropdown(false);
+                          setCalculatedRate(null);
+                          setCompareRates([]);
+                        }}
+                        style={{ padding: "0.6rem 1rem", cursor: "pointer", fontSize: 14, color: "#e5e7eb", borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.1s" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(212,175,55,0.1)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                      >
+                        {v.name}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
+        {/* Vehicle Image Preview */}
         {(() => {
           const selectedVehObj = vehicles.find(v => v.name === selectedVehicle);
           if (selectedVehObj && selectedVehObj.image) {
@@ -200,10 +426,11 @@ export default function RateCalculator() {
           </button>
         </div>
 
+        {/* Calculated Rate Result */}
         {calculatedRate && (
           <div style={{ backgroundColor: "rgba(76, 175, 80, 0.1)", borderLeft: "4px solid #4caf50", padding: "1.5rem", borderRadius: "4px", marginBottom: "2rem" }}>
             <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#ffffff", marginBottom: "0.5rem" }}>
-              Estimated Total: ${calculatedRate.total.toFixed(2)}
+              Total: ${calculatedRate.total.toFixed(2)}
             </div>
             <div style={{ fontSize: "0.95rem", color: "#9ca3af", fontStyle: "italic" }}>
               (Base Rate: ${calculatedRate.base.toFixed(2)} + 5% Fuel Surcharge + 13% HST + 15% Driver Gratuity)
@@ -211,33 +438,76 @@ export default function RateCalculator() {
           </div>
         )}
 
-        <div style={{ marginTop: "2rem" }}>
-          <button
-            onClick={scrollToReservation}
-            style={{ backgroundColor: "#6366f1", color: "white", border: "none", padding: "0.75rem 1.5rem", fontSize: "0.95rem", fontWeight: "500", borderRadius: "4px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.5rem", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 20h14"></path><path d="M5 4v16"></path><path d="M19 4v16"></path><path d="M5 8h14"></path><path d="M5 12h14"></path><path d="M5 16h14"></path><circle cx="9" cy="4" r="1"></circle><circle cx="15" cy="4" r="1"></circle></svg>
-            BOOK YOUR LIMO NOW
-          </button>
-        </div>
+        {/* Book Now Button */}
+        {calculatedRate && (
+          <div style={{ marginBottom: "2rem" }}>
+            <button
+              onClick={scrollToReservation}
+              style={{ backgroundColor: "#6366f1", color: "white", border: "none", padding: "0.75rem 1.5rem", fontSize: "0.95rem", fontWeight: "500", borderRadius: "4px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.5rem", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 20h14"></path><path d="M5 4v16"></path><path d="M19 4v16"></path><path d="M5 8h14"></path><path d="M5 12h14"></path><path d="M5 16h14"></path></svg>
+              BOOK YOUR LIMO NOW
+            </button>
+          </div>
+        )}
+
+        {/* In other vehicles table */}
+        {calculatedRate && otherVehicles.length > 0 && (
+          <div>
+            <h3 style={{ fontSize: "1.75rem", fontWeight: "300", color: "#f3f4f6", marginBottom: "1rem" }}>
+              In other vehicles...
+            </h3>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.95rem" }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid rgba(255,255,255,0.15)" }}>
+                    <th style={{ textAlign: "left", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 600 }}>Vehicle</th>
+                    <th style={{ textAlign: "center", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 600 }}>Max. Passengers</th>
+                    <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 600 }}>Base Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {otherVehicles.map((cr) => (
+                    <tr
+                      key={cr.carType}
+                      style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", transition: "background 0.15s" }}
+                      onClick={() => {
+                        setSelectedVehicle(cr.carType);
+                        setCalculatedRate(null);
+                        setCompareRates([]);
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <td style={{ padding: "0.75rem 1rem", color: "#e5e7eb", fontWeight: 500 }}>{cr.carType}</td>
+                      <td style={{ padding: "0.75rem 1rem", color: "#d1d5db", textAlign: "center" }}>{cr.maxPassengers}</td>
+                      <td style={{ padding: "0.75rem 1rem", color: "#D4AF37", fontWeight: 600, textAlign: "right" }}>${cr.tariff.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* Services Section */}
       <div style={{ marginTop: "3rem" }}>
         <h3 style={{ fontSize: "2rem", fontWeight: "300", color: "#f3f4f6", marginBottom: "1.5rem" }}>
           Services Offered in this Vehicle
         </h3>
         <ul style={{ fontSize: "0.95rem", lineHeight: "2", color: "#d1d5db", paddingLeft: "2rem" }}>
-          <li style={{ color: "#d1d5db" }}>Point to point service</li>
-          <li style={{ color: "#d1d5db" }}>Dedicated chauffeur service</li>
+          <li>Point to point service</li>
+          <li>Dedicated chauffeur service</li>
           <li style={{ color: "#4ade80" }}>Airport transfer</li>
-          <li style={{ color: "#d1d5db" }}>Night life service</li>
-          <li style={{ color: "#d1d5db" }}>Birthday parties</li>
+          <li>Night life service</li>
+          <li>Birthday parties</li>
           <li style={{ color: "#4ade80" }}>Prom and Graduation Limo Rental</li>
           <li style={{ color: "#4ade80" }}>Casino trips</li>
-          <li style={{ color: "#d1d5db" }}>Scenic tours</li>
+          <li>Scenic tours</li>
           <li style={{ color: "#4ade80" }}>Wine tours</li>
-          <li style={{ color: "#d1d5db" }}>Sport events</li>
-          <li style={{ color: "#d1d5db" }}>and more..</li>
+          <li>Sport events</li>
+          <li>and more..</li>
         </ul>
       </div>
     </div>

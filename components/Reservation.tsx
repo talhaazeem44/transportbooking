@@ -2,12 +2,18 @@
 import React, { useState, useEffect } from "react";
 import styles from "./Reservation.module.css";
 import Map from "./Map";
-import { ratesData } from "@/lib/ratesData";
 
 interface ReservationProps {
   selectedVehicle?: string;
   isModal?: boolean;
   onClose?: () => void;
+}
+
+interface CompareEntry {
+  carType: string;
+  tariff: number;
+  maxPassengers: number;
+  total: number;
 }
 
 interface VehicleOption {
@@ -25,44 +31,24 @@ interface ServiceOption {
   name: string;
 }
 
-/** Determine whether a vehicle is "premium/limo" tier or "sedan/taxi" tier */
-function getVehicleTier(veh: VehicleOption): "limo" | "taxi" {
-  const name = (veh.name || "").toLowerCase();
-  const cat = (veh.category || "").toLowerCase();
-  const premiumKeywords = [
-    "suv", "limo", "limousine", "sprinter", "stretch", "van",
-    "executive", "luxury", "premium", "business", "elite",
-    "escalade", "navigator", "suburban", "mercedes", "bmw",
-    "cadillac", "lincoln",
-  ];
-  return premiumKeywords.some((k) => name.includes(k) || cat.includes(k))
-    ? "limo"
-    : "taxi";
-}
-
 const MEET_GREET_FEE = 49;
 
-/** Compute the full fare breakdown for a city + vehicle combination */
-function computeFare(
-  cityName: string,
-  veh: VehicleOption | undefined,
-  meetAndGreet: boolean = false
-) {
-  if (!cityName || !veh) return null;
-  const cityData = ratesData.find((c) => c.city === cityName);
-  if (!cityData) return null;
+interface FareBreakdown {
+  base: number;
+  fuel: number;
+  hst: number;
+  gratuity: number;
+  meetGreetFee: number;
+  total: number;
+}
 
-  const tier = getVehicleTier(veh);
-  const base = tier === "limo" ? cityData.limo : cityData.taxi;
-  if (!base) return null;
-
+function buildFare(base: number, meetAndGreet: boolean): FareBreakdown {
   const fuel = +(base * 0.05).toFixed(2);
   const hst = +(base * 0.13).toFixed(2);
   const gratuity = +(base * 0.15).toFixed(2);
   const meetGreetFee = meetAndGreet ? MEET_GREET_FEE : 0;
   const total = +(base + fuel + hst + gratuity + meetGreetFee).toFixed(2);
-
-  return { base, fuel, hst, gratuity, meetGreetFee, total, tier };
+  return { base, fuel, hst, gratuity, meetGreetFee, total };
 }
 
 export default function Reservation({
@@ -72,6 +58,9 @@ export default function Reservation({
 }: ReservationProps) {
   const [serviceTypes, setServiceTypes] = useState<ServiceOption[]>([]);
   const [vehicles, setVehicles] = useState<VehicleOption[]>([]);
+  const [destinations, setDestinations] = useState<string[]>([]);
+  const [fare, setFare] = useState<FareBreakdown | null>(null);
+  const [compareRates, setCompareRates] = useState<CompareEntry[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [submitState, setSubmitState] = useState<
     "idle" | "submitting" | "success" | "error"
@@ -83,6 +72,7 @@ export default function Reservation({
     email: "",
     phone: "",
     serviceTypeId: "",
+    carType: "",
     vehiclePreferenceId: "",
     passengers: "1",
     bags: "1",
@@ -117,26 +107,34 @@ export default function Reservation({
           vRes.json(),
         ]);
         setServiceTypes(sData.items || []);
-        setVehicles(vData.items || []);
+        const vItems = vData.items || [];
+        setVehicles(vItems);
 
         setFormData((prev) => {
           let serviceTypeId = prev.serviceTypeId;
           let vehiclePreferenceId = prev.vehiclePreferenceId;
+          let carType = prev.carType;
 
           if (!serviceTypeId && sData.items?.length) {
             serviceTypeId = sData.items[0].id;
           }
-          if (selectedVehicle && vData.items?.length) {
-            const match = vData.items.find(
+          if (selectedVehicle && vItems.length) {
+            const match = vItems.find(
               (v: VehicleOption) =>
                 v.name.toLowerCase() === selectedVehicle.toLowerCase()
             );
-            if (match) vehiclePreferenceId = match.id;
+            if (match) {
+              vehiclePreferenceId = match.id;
+              carType = match.name;
+            }
           }
-          if (!vehiclePreferenceId && vData.items?.length) {
-            vehiclePreferenceId = vData.items[0].id;
+          if (!vehiclePreferenceId && vItems.length) {
+            vehiclePreferenceId = vItems[0].id;
           }
-          return { ...prev, serviceTypeId, vehiclePreferenceId };
+          if (!carType && vItems.length) {
+            carType = vItems[0].name;
+          }
+          return { ...prev, serviceTypeId, vehiclePreferenceId, carType };
         });
       } catch (e) {
         console.error(e);
@@ -147,10 +145,69 @@ export default function Reservation({
     load();
   }, [selectedVehicle]);
 
+  // Load destinations when car type changes
+  useEffect(() => {
+    if (!formData.carType) {
+      setDestinations([]);
+      return;
+    }
+    const loadDest = async () => {
+      try {
+        const res = await fetch(`/api/rates/destinations?carType=${encodeURIComponent(formData.carType)}&airport=YYZ`);
+        const data = await res.json();
+        setDestinations(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error(e);
+        setDestinations([]);
+      }
+    };
+    loadDest();
+    // Reset city when car type changes
+    setFormData((prev) => ({ ...prev, city: "" }));
+    setCompareRates([]);
+  }, [formData.carType]);
+
+  // Load compare rates (other vehicles) when city changes
+  useEffect(() => {
+    if (!formData.city) {
+      setCompareRates([]);
+      return;
+    }
+    const loadCompare = async () => {
+      try {
+        const res = await fetch(`/api/rates/compare?destination=${encodeURIComponent(formData.city)}&airport=YYZ`);
+        if (!res.ok) { setCompareRates([]); return; }
+        const data = await res.json();
+        setCompareRates(Array.isArray(data) ? data : []);
+      } catch {
+        setCompareRates([]);
+      }
+    };
+    loadCompare();
+  }, [formData.city]);
+
   const selectedVeh = vehicles.find((v) => v.id === formData.vehiclePreferenceId);
 
-  // Live fare calculation — updates every time city, vehicle, or meet & greet changes
-  const fare = computeFare(formData.city, selectedVeh, formData.meetAndGreet);
+  // Live fare calculation — fetch from DB when carType + city changes
+  useEffect(() => {
+    if (!formData.carType || !formData.city) {
+      setFare(null);
+      return;
+    }
+    const lookupFare = async () => {
+      try {
+        const res = await fetch(
+          `/api/rates/lookup?carType=${encodeURIComponent(formData.carType)}&destination=${encodeURIComponent(formData.city)}&airport=YYZ`
+        );
+        if (!res.ok) { setFare(null); return; }
+        const data = await res.json();
+        setFare(buildFare(data.tariff, formData.meetAndGreet));
+      } catch {
+        setFare(null);
+      }
+    };
+    lookupFare();
+  }, [formData.carType, formData.city, formData.meetAndGreet]);
 
   // ─── Submit ───────────────────────────────────────────────────────
   const handleSubmit = async (mode: "pay" | "quote") => {
@@ -351,12 +408,20 @@ export default function Reservation({
 
           <div className={styles.formGroup}>
             <label>Vehicle</label>
-            <select name="vehiclePreferenceId" onChange={handleChange}
-              value={formData.vehiclePreferenceId} disabled={isFormDisabled}>
+            <select name="carType" onChange={(e) => {
+              const val = e.target.value;
+              const matched = vehicles.find((v) => v.name === val);
+              setFormData((prev) => ({
+                ...prev,
+                carType: val,
+                vehiclePreferenceId: matched?.id || prev.vehiclePreferenceId,
+              }));
+            }}
+              value={formData.carType} disabled={isFormDisabled}>
+              <option value="">Select Vehicle</option>
               {vehicles.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                  {v.passengers ? ` — up to ${v.passengers} ` : ""}
+                <option key={v.id} value={v.name}>
+                  {v.name}{v.passengers ? ` — up to ${v.passengers} pax` : ""}
                 </option>
               ))}
             </select>
@@ -371,10 +436,10 @@ export default function Reservation({
               </span>
             </label>
             <select name="city" onChange={handleChange}
-              value={formData.city} disabled={isFormDisabled}>
-              <option value="">Select a City</option>
-              {ratesData.map((r) => (
-                <option key={r.city} value={r.city}>{r.city}</option>
+              value={formData.city} disabled={isFormDisabled || !formData.carType}>
+              <option value="">{formData.carType ? "Select a City" : "Select a Car Type first"}</option>
+              {destinations.map((dest) => (
+                <option key={dest} value={dest}>{dest}</option>
               ))}
             </select>
             <small style={{ fontSize: 11, color: "#9ca3af", marginTop: 4, display: "block" }}>
@@ -393,7 +458,7 @@ export default function Reservation({
                 marginBottom: "0.5rem",
               }}>
                 <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 1, marginBottom: "0.75rem" }}>
-                  Estimated Fare — {formData.city} → {selectedVeh?.name} ({fare.tier === "limo" ? "Limo/SUV Rate" : "Sedan Rate"})
+                  Estimated Fare — {formData.city} → {formData.carType}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem 1rem", fontSize: 14, color: "#d1d5db", marginBottom: "0.75rem" }}>
                   <span>Base Rate:</span>
@@ -436,6 +501,55 @@ export default function Reservation({
               </div>
             </div>
           ) : null}
+
+          {/* In other vehicles table */}
+          {formData.city && compareRates.length > 1 && (
+            <div className={`${styles.fullWidth}`}>
+              <div style={{
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 10,
+                overflow: "hidden",
+                marginBottom: "0.5rem",
+              }}>
+                <div style={{ padding: "0.75rem 1rem", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: "#e5e7eb" }}>
+                    In other vehicles...
+                  </span>
+                </div>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                      <th style={{ textAlign: "left", padding: "0.6rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12 }}>Vehicle</th>
+                      <th style={{ textAlign: "center", padding: "0.6rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12 }}>Max. Passengers</th>
+                      <th style={{ textAlign: "right", padding: "0.6rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12 }}>Base Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {compareRates
+                      .filter((cr) => cr.carType !== formData.carType)
+                      .map((cr) => (
+                        <tr
+                          key={cr.carType}
+                          style={{
+                            borderBottom: "1px solid rgba(255,255,255,0.05)",
+                            cursor: "pointer",
+                            transition: "background 0.15s",
+                          }}
+                          onClick={() => setFormData((prev) => ({ ...prev, carType: cr.carType }))}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(212,175,55,0.06)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                        >
+                          <td style={{ padding: "0.7rem 1rem", color: "#e5e7eb", fontWeight: 500 }}>{cr.carType}</td>
+                          <td style={{ padding: "0.7rem 1rem", color: "#d1d5db", textAlign: "center" }}>{cr.maxPassengers}</td>
+                          <td style={{ padding: "0.7rem 1rem", color: "#D4AF37", fontWeight: 600, textAlign: "right" }}>${cr.tariff.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           <div className={styles.formGroup}>
             <label>Passengers</label>
@@ -687,7 +801,7 @@ export default function Reservation({
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
               <div>
                 <div style={{ color: "#9ca3af", fontSize: 12, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-                  {selectedVeh?.name} — {formData.city}
+                  {formData.carType} — {formData.city}
                 </div>
                 <div style={{ color: "#D4AF37", fontSize: 30, fontWeight: 800, lineHeight: 1, marginBottom: 6 }}>
                   CA${fare.total.toFixed(2)}

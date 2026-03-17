@@ -1,34 +1,54 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 interface RateEntry {
   id: string;
   destination: string;
   tariff: number;
   carType: string;
+  airport: string;
 }
 
-const emptyForm = { id: "", destination: "", tariff: 0, carType: "" };
+interface AirportOption {
+  id: string;
+  name: string;
+  code: string;
+}
+
+const emptyForm = { id: "", destination: "", tariff: 0, carType: "", airport: "" };
 
 export default function AdminRatesPage() {
+  const searchParams = useSearchParams();
   const [rates, setRates]           = useState<RateEntry[]>([]);
+  const [airports, setAirports]     = useState<AirportOption[]>([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
   const [showForm, setShowForm]     = useState(false);
   const [editingId, setEditingId]   = useState<string | null>(null);
   const [formData, setFormData]     = useState<typeof emptyForm>({ ...emptyForm });
   const [search, setSearch]         = useState("");
-  const [carTypeFilter, setCarTypeFilter] = useState("All");
+  const [carTypeFilter, setCarTypeFilter] = useState("");
+  const [airportFilter, setAirportFilter] = useState(searchParams.get("airport") || "");
   const [saving, setSaving]         = useState(false);
+  const [page, setPage]             = useState(1);
+  const [perPage, setPerPage]       = useState(25);
+  const [bulkAdjust, setBulkAdjust] = useState<number>(0);
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [success, setSuccess]       = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res  = await fetch("/api/admin/rates");
-      if (!res.ok) throw new Error("Failed to load rates");
-      setRates(await res.json());
+      const [rRes, aRes] = await Promise.all([
+        fetch("/api/admin/rates"),
+        fetch("/api/admin/airports"),
+      ]);
+      if (!rRes.ok) throw new Error("Failed to load rates");
+      setRates(await rRes.json());
+      if (aRes.ok) setAirports(await aRes.json());
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -81,6 +101,31 @@ export default function AdminRatesPage() {
     }
   };
 
+  const handleBulkAdjust = async () => {
+    if (!bulkAdjust || !carTypeFilter) return;
+    const action = bulkAdjust > 0 ? `+$${bulkAdjust}` : `-$${Math.abs(bulkAdjust)}`;
+    if (!confirm(`Apply ${action} to ALL destinations for "${carTypeFilter}"?`)) return;
+    setBulkSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch("/api/admin/rates/bulk-adjust", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ carType: carTypeFilter, adjustment: bulkAdjust, airport: airportFilter }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      setSuccess(`${action} applied to ${data.modifiedCount} rates for "${carTypeFilter}"`);
+      setBulkAdjust(0);
+      load();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this rate?")) return;
     try {
@@ -91,14 +136,32 @@ export default function AdminRatesPage() {
     }
   };
 
-  const uniqueCarTypes = ["All", ...Array.from(new Set(rates.map(r => r.carType))).sort()];
+  const airportRates = airportFilter ? rates.filter(r => r.airport === airportFilter) : rates;
+  const uniqueCarTypes = Array.from(new Set(airportRates.map(r => r.carType))).sort();
+
+  const uniqueAirports = Array.from(new Set(rates.map(r => r.airport))).sort();
+
+  // Auto-select first airport if none selected
+  if (!airportFilter && uniqueAirports.length > 0 && !loading) {
+    setAirportFilter(uniqueAirports[0]);
+  }
+
+  // Auto-select first car type if none selected
+  if (!carTypeFilter && uniqueCarTypes.length > 0 && !loading) {
+    setCarTypeFilter(uniqueCarTypes[0]);
+  }
 
   const filtered = rates.filter(r => {
     const matchesSearch = r.destination.toLowerCase().includes(search.toLowerCase()) ||
       r.carType.toLowerCase().includes(search.toLowerCase());
-    const matchesType = carTypeFilter === "All" || r.carType === carTypeFilter;
-    return matchesSearch && matchesType;
-  });
+    const matchesType = r.carType === carTypeFilter;
+    const matchesAirport = !airportFilter || r.airport === airportFilter;
+    return matchesSearch && matchesType && matchesAirport;
+  }).sort((a, b) => a.destination.localeCompare(b.destination));
+
+  const totalPages = Math.ceil(filtered.length / perPage);
+  const safePage = Math.min(page, totalPages || 1);
+  const paginated = filtered.slice((safePage - 1) * perPage, safePage * perPage);
 
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "0.6rem 0.75rem",
@@ -123,6 +186,11 @@ export default function AdminRatesPage() {
       {error && (
         <div style={{ background: "#7f1d1d", color: "#fca5a5", padding: "0.75rem 1rem", borderRadius: 6, marginBottom: "1rem", fontSize: 14 }}>
           {error}
+        </div>
+      )}
+      {success && (
+        <div style={{ background: "#14532d", color: "#86efac", padding: "0.75rem 1rem", borderRadius: 6, marginBottom: "1rem", fontSize: 14 }}>
+          {success}
         </div>
       )}
 
@@ -183,8 +251,7 @@ export default function AdminRatesPage() {
                 <strong style={{ color: "#D4AF37" }}>Preview:</strong> {formData.destination} · {formData.carType} ·{" "}
                 <strong style={{ color: "#4caf50" }}>CA${Number(formData.tariff).toFixed(2)}</strong>{" "}
                 <span style={{ color: "#6b7280" }}>
-                  → Total with fees: CA${(formData.tariff * 1.33).toFixed(2)}
-                  <span style={{ fontSize: 11, marginLeft: 4 }}>(+5% fuel +13% HST +15% gratuity)</span>
+                  → Fuel 5%: CA${(formData.tariff * 0.05).toFixed(2)} · HST 13%: CA${(formData.tariff * 0.13).toFixed(2)} · Gratuity 15%: CA${(formData.tariff * 0.15).toFixed(2)} · <strong style={{ color: "#4caf50" }}>Total: CA${(formData.tariff * 1.33).toFixed(2)}</strong>
                 </span>
               </div>
             )}
@@ -203,24 +270,50 @@ export default function AdminRatesPage() {
         </div>
       )}
 
-      {/* Search + Car Type Filter */}
+      {/* Airport + Car Type Filter + Search */}
       <div style={{ marginBottom: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        {/* Airport Filter */}
+        {uniqueAirports.length > 0 && (
+          <div>
+            <span style={{ fontSize: 12, color: "#6b7280", marginRight: 8 }}>Airport:</span>
+            <span style={{ display: "inline-flex", flexWrap: "wrap", gap: "0.4rem" }}>
+              {uniqueAirports.map(ap => {
+                const active = airportFilter === ap;
+                const apInfo = airports.find(a => a.code === ap);
+                const label = apInfo ? `${ap} – ${apInfo.name}` : ap;
+                return (
+                  <button key={ap} onClick={() => { setAirportFilter(ap); setCarTypeFilter(""); setPage(1); }}
+                    style={{
+                      padding: "0.3rem 0.85rem", borderRadius: 20, fontSize: 12, cursor: "pointer", transition: "all 0.15s",
+                      border: active ? "1px solid #60a5fa" : "1px solid #374151",
+                      background: active ? "rgba(96,165,250,0.15)" : "#0a0a0a",
+                      color: active ? "#60a5fa" : "#9ca3af",
+                      fontWeight: active ? 600 : 400,
+                    }}>
+                    {label}
+                  </button>
+                );
+              })}
+            </span>
+          </div>
+        )}
+
         <input
           type="text"
           placeholder="Search by destination or car type…"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={e => { setSearch(e.target.value); setPage(1); }}
           style={{ ...inputStyle, maxWidth: 360 }}
         />
         {uniqueCarTypes.length > 1 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
             {uniqueCarTypes.map(ct => {
               const active = carTypeFilter === ct;
-              const count  = ct === "All" ? rates.length : rates.filter(r => r.carType === ct).length;
+              const count  = rates.filter(r => r.carType === ct).length;
               return (
                 <button
                   key={ct}
-                  onClick={() => setCarTypeFilter(ct)}
+                  onClick={() => { setCarTypeFilter(ct); setPage(1); }}
                   style={{
                     padding: "0.3rem 0.85rem",
                     borderRadius: 20,
@@ -239,6 +332,32 @@ export default function AdminRatesPage() {
             })}
           </div>
         )}
+
+        {/* Bulk Adjust */}
+        {carTypeFilter && (
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.75rem" }}>
+            <span style={{ fontSize: 13, color: "#9ca3af" }}>Bulk adjust all tariffs for <strong style={{ color: "#e5e7eb" }}>{carTypeFilter}</strong>:</span>
+            <input
+              type="number"
+              value={bulkAdjust || ""}
+              onChange={(e) => setBulkAdjust(Number(e.target.value))}
+              placeholder="+10 or -5"
+              style={{ width: 100, padding: "0.4rem 0.6rem", background: "#0a0a0a", border: "1px solid #374151", borderRadius: 4, color: "#e5e7eb", fontSize: 13, outline: "none", textAlign: "center" }}
+            />
+            <button
+              onClick={handleBulkAdjust}
+              disabled={!bulkAdjust || bulkSaving}
+              style={{
+                padding: "0.4rem 1rem", borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: !bulkAdjust || bulkSaving ? "not-allowed" : "pointer",
+                background: !bulkAdjust || bulkSaving ? "#374151" : bulkAdjust > 0 ? "#166534" : "#7f1d1d",
+                color: !bulkAdjust || bulkSaving ? "#6b7280" : "#fff",
+                border: "none",
+              }}
+            >
+              {bulkSaving ? "Applying..." : bulkAdjust > 0 ? `+$${bulkAdjust} All` : bulkAdjust < 0 ? `-$${Math.abs(bulkAdjust)} All` : "Apply"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -251,7 +370,23 @@ export default function AdminRatesPage() {
       ) : (
         <div style={{ background: "#020617", border: "1px solid #1f2937", borderRadius: 10, overflow: "hidden" }}>
           <div style={{ padding: "0.75rem 1.25rem", background: "#0a0a0a", borderBottom: "1px solid #1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "#9ca3af" }}>{filtered.length} rate{filtered.length !== 1 ? "s" : ""}</span>
+            <span style={{ fontSize: 13, color: "#9ca3af" }}>
+              Showing {(safePage - 1) * perPage + 1}–{Math.min(safePage * perPage, filtered.length)} of {filtered.length} rate{filtered.length !== 1 ? "s" : ""}
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span style={{ fontSize: 12, color: "#6b7280" }}>Per page:</span>
+              {[25, 50, 100].map(n => (
+                <button key={n} onClick={() => { setPerPage(n); setPage(1); }}
+                  style={{
+                    padding: "0.2rem 0.6rem", borderRadius: 4, fontSize: 12, cursor: "pointer",
+                    border: perPage === n ? "1px solid #D4AF37" : "1px solid #374151",
+                    background: perPage === n ? "rgba(212,175,55,0.15)" : "#0a0a0a",
+                    color: perPage === n ? "#D4AF37" : "#9ca3af",
+                  }}>
+                  {n}
+                </button>
+              ))}
+            </div>
           </div>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
             <thead>
@@ -259,12 +394,15 @@ export default function AdminRatesPage() {
                 <th style={{ textAlign: "left", padding: "0.75rem 1.25rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Destination</th>
                 <th style={{ textAlign: "left", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Car Type</th>
                 <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Tariff</th>
-                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Total (with fees)</th>
+                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Fuel 5%</th>
+                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>HST 13%</th>
+                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Gratuity 15%</th>
+                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Total</th>
                 <th style={{ textAlign: "center", padding: "0.75rem 1.25rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r, i) => (
+              {paginated.map((r, i) => (
                 <tr key={r.id} style={{ borderBottom: "1px solid #1f2937", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
                   <td style={{ padding: "0.85rem 1.25rem", color: "#f3f4f6", fontWeight: 500 }}>{r.destination}</td>
                   <td style={{ padding: "0.85rem 1rem", color: "#d1d5db" }}>
@@ -272,6 +410,15 @@ export default function AdminRatesPage() {
                   </td>
                   <td style={{ padding: "0.85rem 1rem", color: "#D4AF37", fontWeight: 700, textAlign: "right" }}>
                     CA${r.tariff.toFixed(2)}
+                  </td>
+                  <td style={{ padding: "0.85rem 1rem", color: "#d1d5db", textAlign: "right" }}>
+                    CA${(r.tariff * 0.05).toFixed(2)}
+                  </td>
+                  <td style={{ padding: "0.85rem 1rem", color: "#d1d5db", textAlign: "right" }}>
+                    CA${(r.tariff * 0.13).toFixed(2)}
+                  </td>
+                  <td style={{ padding: "0.85rem 1rem", color: "#d1d5db", textAlign: "right" }}>
+                    CA${(r.tariff * 0.15).toFixed(2)}
                   </td>
                   <td style={{ padding: "0.85rem 1rem", color: "#4caf50", fontWeight: 600, textAlign: "right" }}>
                     CA${(r.tariff * 1.33).toFixed(2)}
@@ -292,6 +439,74 @@ export default function AdminRatesPage() {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{ padding: "0.75rem 1.25rem", background: "#0a0a0a", borderTop: "1px solid #1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={safePage <= 1}
+                style={{
+                  padding: "0.4rem 1rem", borderRadius: 4, fontSize: 13, cursor: safePage <= 1 ? "not-allowed" : "pointer",
+                  border: "1px solid #374151", background: "#0a0a0a",
+                  color: safePage <= 1 ? "#4b5563" : "#e5e7eb",
+                }}
+              >
+                Previous
+              </button>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
+                  .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((p, idx) =>
+                    typeof p === "string" ? (
+                      <span key={`dots-${idx}`} style={{ color: "#6b7280", fontSize: 13, padding: "0 0.3rem" }}>…</span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        style={{
+                          padding: "0.3rem 0.65rem", borderRadius: 4, fontSize: 13, cursor: "pointer",
+                          border: p === safePage ? "1px solid #D4AF37" : "1px solid #374151",
+                          background: p === safePage ? "rgba(212,175,55,0.15)" : "#0a0a0a",
+                          color: p === safePage ? "#D4AF37" : "#9ca3af",
+                          fontWeight: p === safePage ? 600 : 400,
+                        }}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
+              </div>
+
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={safePage >= totalPages}
+                style={{
+                  padding: "0.4rem 1rem", borderRadius: 4, fontSize: 13, cursor: safePage >= totalPages ? "not-allowed" : "pointer",
+                  border: "1px solid #374151", background: "#0a0a0a",
+                  color: safePage >= totalPages ? "#4b5563" : "#e5e7eb",
+                }}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Fee Notes */}
+      {!loading && filtered.length > 0 && (
+        <div style={{ marginTop: "1.25rem", padding: "1rem 1.25rem", background: "#020617", border: "1px solid #1f2937", borderRadius: 8, fontSize: 12, color: "#9ca3af", lineHeight: 1.8 }}>
+          <strong style={{ color: "#D4AF37" }}>Fee Breakdown:</strong><br />
+          • All rates are subject to <strong style={{ color: "#e5e7eb" }}>5% Fuel Surcharge</strong><br />
+          • All rates are subject to <strong style={{ color: "#e5e7eb" }}>13% HST</strong> (government tax)<br />
+          • All reservations are subject to <strong style={{ color: "#e5e7eb" }}>15% Driver Gratuity</strong>
         </div>
       )}
     </div>

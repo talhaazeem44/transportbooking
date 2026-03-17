@@ -11,6 +11,7 @@ export async function GET() {
       destination: r.destination,
       tariff: r.tariff,
       carType: r.carType,
+      airport: r.airport || "YYZ",
     }))
   );
 }
@@ -19,7 +20,6 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   await dbConnect();
 
-  // Accept both a single object and an array
   const entries = Array.isArray(body) ? body : [body];
 
   const invalid = entries.findIndex(
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     destination: String(e.destination).trim(),
     tariff:      Number(e.tariff),
     carType:     String(e.carType).trim(),
+    airport:     String(e.airport || "YYZ").trim(),
   }));
 
   const created = await (Rate as any).insertMany(docs, { ordered: false });
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
     destination: r.destination,
     tariff:      r.tariff,
     carType:     r.carType,
+    airport:     r.airport,
   }));
 
   // Return single object for single entry, array for bulk

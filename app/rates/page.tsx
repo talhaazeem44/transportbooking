@@ -1,5 +1,4 @@
 import Navbar from "@/components/Navbar";
-import Rates from "@/components/Rates";
 import Footer from "@/components/Footer";
 import Reservation from "@/components/Reservation";
 import RateCalculator from "@/components/RateCalculator";
@@ -13,9 +12,8 @@ export default function RatesPage() {
     return (
         <main>
             <Navbar />
-            <div style={{ paddingTop: '80px' }}> {/* Adjust for fixed navbar height */}
+            <div style={{ paddingTop: '80px' }}>
                 <RateCalculator />
-                <Rates />
             </div>
             <div id="reservation-section">
                 <Reservation />

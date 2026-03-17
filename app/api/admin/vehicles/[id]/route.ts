@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongodb";
 import { VehiclePreference } from "@/models/VehiclePreference";
 import { isAdminRequest } from "@/lib/adminAuth";
+import { Rate } from "@/models/Rate";
 
 export async function PATCH(
   req: NextRequest,
@@ -18,11 +19,17 @@ export async function PATCH(
     return NextResponse.json({ error: "Name is required" }, { status: 400 });
   }
   await dbConnect();
+
+  // Get old name to update rates if renamed
+  const existing = await VehiclePreference.findById(id).lean();
+  const oldName = existing?.name;
+  const newName = name.trim();
+
   await VehiclePreference.updateOne(
     { _id: id },
     {
       $set: {
-        name: name.trim(),
+        name: newName,
         category: category?.trim() || "",
         image: image?.trim() || "",
         passengers: Number(passengers) || 0,
@@ -32,6 +39,15 @@ export async function PATCH(
       },
     }
   );
+
+  // Update all rates if name changed
+  if (oldName && oldName !== newName) {
+    await (Rate as any).updateMany(
+      { carType: oldName },
+      { $set: { carType: newName } }
+    );
+  }
+
   return NextResponse.json({ ok: true });
 }
 
@@ -45,6 +61,13 @@ export async function DELETE(
   // }
   const { id } = await context.params;
   await dbConnect();
+
+  // Get vehicle name to delete related rates
+  const vehicle = await VehiclePreference.findById(id).lean();
+  if (vehicle?.name) {
+    await (Rate as any).deleteMany({ carType: vehicle.name });
+  }
+
   await VehiclePreference.deleteOne({ _id: id });
   return NextResponse.json({ ok: true });
 }
