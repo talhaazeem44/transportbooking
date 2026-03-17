@@ -23,6 +23,7 @@ export default function AdminRatesPage() {
   const searchParams = useSearchParams();
   const [rates, setRates]           = useState<RateEntry[]>([]);
   const [airports, setAirports]     = useState<AirportOption[]>([]);
+  const [vehicles, setVehicles]     = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
   const [showForm, setShowForm]     = useState(false);
@@ -42,13 +43,18 @@ export default function AdminRatesPage() {
     setLoading(true);
     setError(null);
     try {
-      const [rRes, aRes] = await Promise.all([
+      const [rRes, aRes, vRes] = await Promise.all([
         fetch("/api/admin/rates"),
         fetch("/api/admin/airports"),
+        fetch("/api/vehicles"),
       ]);
       if (!rRes.ok) throw new Error("Failed to load rates");
       setRates(await rRes.json());
       if (aRes.ok) setAirports(await aRes.json());
+      if (vRes.ok) {
+        const vData = await vRes.json();
+        setVehicles((vData.items || []).map((v: any) => ({ id: v.id, name: v.name })));
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -60,13 +66,13 @@ export default function AdminRatesPage() {
 
   const openAdd = () => {
     setEditingId(null);
-    setFormData({ ...emptyForm });
+    setFormData({ ...emptyForm, carType: carTypeFilter, airport: airportFilter });
     setShowForm(true);
   };
 
   const openEdit = (r: RateEntry) => {
     setEditingId(r.id);
-    setFormData({ id: r.id, destination: r.destination, tariff: r.tariff, carType: r.carType });
+    setFormData({ id: r.id, destination: r.destination, tariff: r.tariff, carType: r.carType, airport: r.airport });
     setShowForm(true);
   };
 
@@ -79,14 +85,14 @@ export default function AdminRatesPage() {
         const res = await fetch(`/api/admin/rates/${editingId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ destination: formData.destination, tariff: formData.tariff, carType: formData.carType }),
+          body: JSON.stringify({ destination: formData.destination, tariff: formData.tariff, carType: formData.carType, airport: formData.airport }),
         });
         if (!res.ok) throw new Error("Failed to update rate");
       } else {
         const res = await fetch("/api/admin/rates", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ destination: formData.destination, tariff: formData.tariff, carType: formData.carType }),
+          body: JSON.stringify({ destination: formData.destination, tariff: formData.tariff, carType: formData.carType, airport: formData.airport }),
         });
         if (!res.ok) throw new Error("Failed to create rate");
       }
@@ -201,7 +207,39 @@ export default function AdminRatesPage() {
             {editingId ? "Edit Rate" : "Add New Rate"}
           </h2>
           <form onSubmit={handleSubmit}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
+              <div>
+                <label style={{ display: "block", fontSize: 12, color: "#9ca3af", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  Airport *
+                </label>
+                <select
+                  required
+                  value={formData.airport}
+                  onChange={e => setFormData({ ...formData, airport: e.target.value })}
+                  style={inputStyle}
+                >
+                  <option value="">Select Airport</option>
+                  {airports.map(a => (
+                    <option key={a.id} value={a.code}>{a.code} – {a.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 12, color: "#9ca3af", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  Vehicle *
+                </label>
+                <select
+                  required
+                  value={formData.carType}
+                  onChange={e => setFormData({ ...formData, carType: e.target.value })}
+                  style={inputStyle}
+                >
+                  <option value="">Select Vehicle</option>
+                  {vehicles.map(v => (
+                    <option key={v.id} value={v.name}>{v.name}</option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label style={{ display: "block", fontSize: 12, color: "#9ca3af", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
                   Destination *
@@ -227,19 +265,6 @@ export default function AdminRatesPage() {
                   placeholder="0.00"
                   value={formData.tariff || ""}
                   onChange={e => setFormData({ ...formData, tariff: Number(e.target.value) })}
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: 12, color: "#9ca3af", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Car Type *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Sedan, SUV, Stretch Limo"
-                  value={formData.carType}
-                  onChange={e => setFormData({ ...formData, carType: e.target.value })}
                   style={inputStyle}
                 />
               </div>

@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     destination: String(e.destination).trim(),
     tariff:      Number(e.tariff),
     carType:     String(e.carType).trim(),
-    airport:     String(e.airport || "YYZ").trim(),
+    airport:     e.airport ? String(e.airport).trim() : "YYZ",
   }));
 
   const created = await (Rate as any).insertMany(docs, { ordered: false });
