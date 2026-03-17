@@ -56,7 +56,7 @@ export default function Fleet() {
             <span className={styles.sectionSubtitle}>Our Collection</span>
             <h2 className={styles.sectionTitle}>The Fleet Of Excellence</h2>
           </div>
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#A0A0A0' }}>
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
             Loading vehicles...
           </div>
         </div>
@@ -73,7 +73,7 @@ export default function Fleet() {
         </div>
 
         {vehicles.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#A0A0A0' }}>
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
             No vehicles available at the moment.
           </div>
         ) : (
@@ -119,19 +119,19 @@ export default function Fleet() {
                             style={{
                               width: '100%',
                               height: '100%',
-                              background: '#1A1A1A',
+                              background: '#f1f5f9',
                               display: 'none',
                               flexDirection: 'column',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              color: '#A0A0A0',
+                              color: '#64748b',
                             }}
                           >
                             Image not available
                           </div>
                         </>
                       ) : (
-                        <div style={{ width: '100%', height: '100%', background: '#1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A0A0A0' }}>
+                        <div style={{ width: '100%', height: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
                           No Image
                         </div>
                       )}
@@ -154,7 +154,7 @@ export default function Fleet() {
                           <span style={{ fontSize: "20px", fontWeight: 700, color: "#D4AF37" }}>
                             ${vehicle.rate.toFixed(2)}
                           </span>
-                          <span style={{ fontSize: "14px", color: "#9ca3af", marginLeft: "4px" }}>CAD</span>
+                          <span style={{ fontSize: "14px", color: "#64748b", marginLeft: "4px" }}>CAD</span>
                         </div>
                       )}
                       {vehicle.description && (

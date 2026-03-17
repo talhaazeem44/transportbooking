@@ -101,11 +101,11 @@ export default function Navbar() {
                         <img
                           src={v.image}
                           alt={v.name}
-                          style={{ width: 40, height: 28, objectFit: "contain", flexShrink: 0, background: "rgba(0,0,0,0.3)", borderRadius: 3, padding: 2 }}
+                          style={{ width: 40, height: 28, objectFit: "contain", flexShrink: 0, background: "rgba(0,0,0,0.05)", borderRadius: 3, padding: 2 }}
                         />
                       )}
                       <span>{v.name}</span>
-                      {v.passengers ? <span style={{ marginLeft: "auto", fontSize: 11, color: "#6b7280" }}>{v.passengers} pax</span> : null}
+                      {v.passengers ? <span style={{ marginLeft: "auto", fontSize: 11, color: "#64748b" }}>{v.passengers} pax</span> : null}
                     </Link>
                   ))
                 )}

@@ -1,6 +1,7 @@
 .fleet {
     padding: 8rem 0;
-    background-color: var(--background);
+    background-color: #ffffff;
+    color: #1e293b;
 }
 
 .sectionHeader {
@@ -20,6 +21,7 @@
 .sectionTitle {
     font-size: 3rem;
     font-weight: 700;
+    color: #1e293b;
 }
 
 .carouselContainer {
@@ -35,11 +37,12 @@
 :global(.swiper-button-next),
 :global(.swiper-button-prev) {
     color: var(--accent) !important;
-    background: var(--secondary);
+    background: #ffffff;
     width: 45px !important;
     height: 45px !important;
     border-radius: 50%;
     border: 1px solid var(--accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 :global(.swiper-button-next:after),
@@ -49,7 +52,7 @@
 }
 
 :global(.swiper-pagination-bullet) {
-    background: var(--text-muted) !important;
+    background: #cbd5e1 !important;
     opacity: 0.5;
 }
 
@@ -59,16 +62,18 @@
 }
 
 .vehicleCard {
-    background: var(--secondary);
+    background: #ffffff;
     border-radius: 12px;
     overflow: hidden;
-    border: 1px solid var(--border-glass);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     transition: all 0.4s ease;
 }
 
 .vehicleCard:hover {
     transform: translateY(-10px);
     border-color: var(--accent);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .imageWrapper {
@@ -105,6 +110,7 @@
     font-size: 1.5rem;
     margin-bottom: 1rem;
     font-family: var(--font-serif);
+    color: #1e293b;
 }
 
 .specs {
@@ -118,12 +124,12 @@
     align-items: center;
     gap: 0.5rem;
     font-size: 0.9rem;
-    color: var(--text-muted);
+    color: #64748b;
 }
 
 .description {
     font-size: 0.95rem;
-    color: var(--text-muted);
+    color: #64748b;
     line-height: 1.6;
 }
 

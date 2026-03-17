@@ -171,8 +171,8 @@ export default function AdminRatesPage() {
 
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "0.6rem 0.75rem",
-    background: "#0a0a0a", border: "1px solid #374151",
-    borderRadius: 6, color: "#e5e7eb", fontSize: 14, outline: "none",
+    background: "#ffffff", border: "1px solid #d1d5db",
+    borderRadius: 6, color: "#1e293b", fontSize: 14, outline: "none",
   };
 
   return (
@@ -181,7 +181,7 @@ export default function AdminRatesPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 2 }}>Rates Management</h1>
-          <p style={{ fontSize: 13, color: "#9ca3af" }}>Manage destination rates by car type</p>
+          <p style={{ fontSize: 13, color: "#64748b" }}>Manage destination rates by car type</p>
         </div>
         <button onClick={openAdd}
           style={{ padding: "0.7rem 1.4rem", background: "#D4AF37", color: "#000", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
@@ -190,26 +190,26 @@ export default function AdminRatesPage() {
       </div>
 
       {error && (
-        <div style={{ background: "#7f1d1d", color: "#fca5a5", padding: "0.75rem 1rem", borderRadius: 6, marginBottom: "1rem", fontSize: 14 }}>
+        <div style={{ background: "#fef2f2", color: "#dc2626", padding: "0.75rem 1rem", borderRadius: 6, marginBottom: "1rem", fontSize: 14, border: "1px solid #fecaca" }}>
           {error}
         </div>
       )}
       {success && (
-        <div style={{ background: "#14532d", color: "#86efac", padding: "0.75rem 1rem", borderRadius: 6, marginBottom: "1rem", fontSize: 14 }}>
+        <div style={{ background: "#f0fdf4", color: "#16a34a", padding: "0.75rem 1rem", borderRadius: 6, marginBottom: "1rem", fontSize: 14, border: "1px solid #bbf7d0" }}>
           {success}
         </div>
       )}
 
       {/* Add / Edit Form */}
       {showForm && (
-        <div style={{ background: "#020617", border: "1px solid #1f2937", borderRadius: 10, padding: "1.5rem", marginBottom: "1.5rem" }}>
-          <h2 style={{ fontSize: 17, fontWeight: 600, marginBottom: "1.25rem", color: "#f3f4f6" }}>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "1.5rem", marginBottom: "1.5rem" }}>
+          <h2 style={{ fontSize: 17, fontWeight: 600, marginBottom: "1.25rem", color: "#1e293b" }}>
             {editingId ? "Edit Rate" : "Add New Rate"}
           </h2>
           <form onSubmit={handleSubmit}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
               <div>
-                <label style={{ display: "block", fontSize: 12, color: "#9ca3af", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                <label style={{ display: "block", fontSize: 12, color: "#64748b", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
                   Airport *
                 </label>
                 <select
@@ -225,7 +225,7 @@ export default function AdminRatesPage() {
                 </select>
               </div>
               <div>
-                <label style={{ display: "block", fontSize: 12, color: "#9ca3af", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                <label style={{ display: "block", fontSize: 12, color: "#64748b", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
                   Vehicle *
                 </label>
                 <select
@@ -241,7 +241,7 @@ export default function AdminRatesPage() {
                 </select>
               </div>
               <div>
-                <label style={{ display: "block", fontSize: 12, color: "#9ca3af", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                <label style={{ display: "block", fontSize: 12, color: "#64748b", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
                   Destination *
                 </label>
                 <input
@@ -254,7 +254,7 @@ export default function AdminRatesPage() {
                 />
               </div>
               <div>
-                <label style={{ display: "block", fontSize: 12, color: "#9ca3af", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                <label style={{ display: "block", fontSize: 12, color: "#64748b", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
                   Tariff (CAD) *
                 </label>
                 <input
@@ -272,22 +272,22 @@ export default function AdminRatesPage() {
 
             {/* Live preview */}
             {formData.destination && formData.tariff > 0 && formData.carType && (
-              <div style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: 8, padding: "0.75rem 1rem", marginBottom: "1rem", fontSize: 13, color: "#d1d5db" }}>
+              <div style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: 8, padding: "0.75rem 1rem", marginBottom: "1rem", fontSize: 13, color: "#64748b" }}>
                 <strong style={{ color: "#D4AF37" }}>Preview:</strong> {formData.destination} · {formData.carType} ·{" "}
-                <strong style={{ color: "#4caf50" }}>CA${Number(formData.tariff).toFixed(2)}</strong>{" "}
-                <span style={{ color: "#6b7280" }}>
-                  → Fuel 5%: CA${(formData.tariff * 0.05).toFixed(2)} · HST 13%: CA${(formData.tariff * 0.13).toFixed(2)} · Gratuity 15%: CA${(formData.tariff * 0.15).toFixed(2)} · <strong style={{ color: "#4caf50" }}>Total: CA${(formData.tariff * 1.33).toFixed(2)}</strong>
+                <strong style={{ color: "#16a34a" }}>CA${Number(formData.tariff).toFixed(2)}</strong>{" "}
+                <span style={{ color: "#64748b" }}>
+                  → Fuel 5%: CA${(formData.tariff * 0.05).toFixed(2)} · HST 13%: CA${(formData.tariff * 0.13).toFixed(2)} · Gratuity 15%: CA${(formData.tariff * 0.15).toFixed(2)} · <strong style={{ color: "#16a34a" }}>Total: CA${(formData.tariff * 1.33).toFixed(2)}</strong>
                 </span>
               </div>
             )}
 
             <div style={{ display: "flex", gap: "0.75rem" }}>
               <button type="submit" disabled={saving}
-                style={{ padding: "0.6rem 1.4rem", background: saving ? "#374151" : "#D4AF37", color: saving ? "#9ca3af" : "#000", border: "none", borderRadius: 6, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", fontSize: 14 }}>
+                style={{ padding: "0.6rem 1.4rem", background: saving ? "#e2e8f0" : "#D4AF37", color: saving ? "#94a3b8" : "#000", border: "none", borderRadius: 6, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", fontSize: 14 }}>
                 {saving ? "Saving…" : editingId ? "Update Rate" : "Create Rate"}
               </button>
               <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setFormData({ ...emptyForm }); }}
-                style={{ padding: "0.6rem 1.2rem", background: "#1f2937", color: "#e5e7eb", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 14 }}>
+                style={{ padding: "0.6rem 1.2rem", background: "#f1f5f9", color: "#1e293b", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", fontSize: 14 }}>
                 Cancel
               </button>
             </div>
@@ -300,7 +300,7 @@ export default function AdminRatesPage() {
         {/* Airport Filter */}
         {uniqueAirports.length > 0 && (
           <div>
-            <span style={{ fontSize: 12, color: "#6b7280", marginRight: 8 }}>Airport:</span>
+            <span style={{ fontSize: 12, color: "#64748b", marginRight: 8 }}>Airport:</span>
             <span style={{ display: "inline-flex", flexWrap: "wrap", gap: "0.4rem" }}>
               {uniqueAirports.map(ap => {
                 const active = airportFilter === ap;
@@ -310,9 +310,9 @@ export default function AdminRatesPage() {
                   <button key={ap} onClick={() => { setAirportFilter(ap); setCarTypeFilter(""); setPage(1); }}
                     style={{
                       padding: "0.3rem 0.85rem", borderRadius: 20, fontSize: 12, cursor: "pointer", transition: "all 0.15s",
-                      border: active ? "1px solid #60a5fa" : "1px solid #374151",
-                      background: active ? "rgba(96,165,250,0.15)" : "#0a0a0a",
-                      color: active ? "#60a5fa" : "#9ca3af",
+                      border: active ? "1px solid #60a5fa" : "1px solid #e2e8f0",
+                      background: active ? "#eff6ff" : "#ffffff",
+                      color: active ? "#2563eb" : "#64748b",
                       fontWeight: active ? 600 : 400,
                     }}>
                     {label}
@@ -342,9 +342,9 @@ export default function AdminRatesPage() {
                   style={{
                     padding: "0.3rem 0.85rem",
                     borderRadius: 20,
-                    border: active ? "1px solid #D4AF37" : "1px solid #374151",
-                    background: active ? "rgba(212,175,55,0.15)" : "#0a0a0a",
-                    color: active ? "#D4AF37" : "#9ca3af",
+                    border: active ? "1px solid #D4AF37" : "1px solid #e2e8f0",
+                    background: active ? "rgba(212,175,55,0.1)" : "#ffffff",
+                    color: active ? "#D4AF37" : "#64748b",
                     fontSize: 12,
                     fontWeight: active ? 600 : 400,
                     cursor: "pointer",
@@ -361,21 +361,21 @@ export default function AdminRatesPage() {
         {/* Bulk Adjust */}
         {carTypeFilter && (
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.75rem" }}>
-            <span style={{ fontSize: 13, color: "#9ca3af" }}>Bulk adjust all tariffs for <strong style={{ color: "#e5e7eb" }}>{carTypeFilter}</strong>:</span>
+            <span style={{ fontSize: 13, color: "#64748b" }}>Bulk adjust all tariffs for <strong style={{ color: "#1e293b" }}>{carTypeFilter}</strong>:</span>
             <input
               type="number"
               value={bulkAdjust || ""}
               onChange={(e) => setBulkAdjust(Number(e.target.value))}
               placeholder="+10 or -5"
-              style={{ width: 100, padding: "0.4rem 0.6rem", background: "#0a0a0a", border: "1px solid #374151", borderRadius: 4, color: "#e5e7eb", fontSize: 13, outline: "none", textAlign: "center" }}
+              style={{ width: 100, padding: "0.4rem 0.6rem", background: "#ffffff", border: "1px solid #d1d5db", borderRadius: 4, color: "#1e293b", fontSize: 13, outline: "none", textAlign: "center" }}
             />
             <button
               onClick={handleBulkAdjust}
               disabled={!bulkAdjust || bulkSaving}
               style={{
                 padding: "0.4rem 1rem", borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: !bulkAdjust || bulkSaving ? "not-allowed" : "pointer",
-                background: !bulkAdjust || bulkSaving ? "#374151" : bulkAdjust > 0 ? "#166534" : "#7f1d1d",
-                color: !bulkAdjust || bulkSaving ? "#6b7280" : "#fff",
+                background: !bulkAdjust || bulkSaving ? "#e2e8f0" : bulkAdjust > 0 ? "#16a34a" : "#dc2626",
+                color: !bulkAdjust || bulkSaving ? "#94a3b8" : "#fff",
                 border: "none",
               }}
             >
@@ -387,26 +387,26 @@ export default function AdminRatesPage() {
 
       {/* Table */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "3rem", color: "#9ca3af" }}>Loading rates…</div>
+        <div style={{ textAlign: "center", padding: "3rem", color: "#94a3b8" }}>Loading rates…</div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "3rem", color: "#9ca3af" }}>
+        <div style={{ textAlign: "center", padding: "3rem", color: "#94a3b8" }}>
           {search ? "No rates match your search." : "No rates yet. Click \"+ Add Rate\" to get started."}
         </div>
       ) : (
-        <div style={{ background: "#020617", border: "1px solid #1f2937", borderRadius: 10, overflow: "hidden" }}>
-          <div style={{ padding: "0.75rem 1.25rem", background: "#0a0a0a", borderBottom: "1px solid #1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "#9ca3af" }}>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, overflow: "hidden" }}>
+          <div style={{ padding: "0.75rem 1.25rem", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 13, color: "#64748b" }}>
               Showing {(safePage - 1) * perPage + 1}–{Math.min(safePage * perPage, filtered.length)} of {filtered.length} rate{filtered.length !== 1 ? "s" : ""}
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <span style={{ fontSize: 12, color: "#6b7280" }}>Per page:</span>
+              <span style={{ fontSize: 12, color: "#64748b" }}>Per page:</span>
               {[25, 50, 100].map(n => (
                 <button key={n} onClick={() => { setPerPage(n); setPage(1); }}
                   style={{
                     padding: "0.2rem 0.6rem", borderRadius: 4, fontSize: 12, cursor: "pointer",
-                    border: perPage === n ? "1px solid #D4AF37" : "1px solid #374151",
-                    background: perPage === n ? "rgba(212,175,55,0.15)" : "#0a0a0a",
-                    color: perPage === n ? "#D4AF37" : "#9ca3af",
+                    border: perPage === n ? "1px solid #D4AF37" : "1px solid #e2e8f0",
+                    background: perPage === n ? "rgba(212,175,55,0.1)" : "#ffffff",
+                    color: perPage === n ? "#D4AF37" : "#64748b",
                   }}>
                   {n}
                 </button>
@@ -415,47 +415,47 @@ export default function AdminRatesPage() {
           </div>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
             <thead>
-              <tr style={{ background: "#0a0a0a", borderBottom: "1px solid #1f2937" }}>
-                <th style={{ textAlign: "left", padding: "0.75rem 1.25rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Destination</th>
-                <th style={{ textAlign: "left", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Car Type</th>
-                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Tariff</th>
-                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Fuel 5%</th>
-                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>HST 13%</th>
-                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Gratuity 15%</th>
-                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Total</th>
-                <th style={{ textAlign: "center", padding: "0.75rem 1.25rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Actions</th>
+              <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+                <th style={{ textAlign: "left", padding: "0.75rem 1.25rem", color: "#64748b", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Destination</th>
+                <th style={{ textAlign: "left", padding: "0.75rem 1rem", color: "#64748b", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Car Type</th>
+                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#64748b", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Tariff</th>
+                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#64748b", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Fuel 5%</th>
+                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#64748b", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>HST 13%</th>
+                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#64748b", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Gratuity 15%</th>
+                <th style={{ textAlign: "right", padding: "0.75rem 1rem", color: "#64748b", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Total</th>
+                <th style={{ textAlign: "center", padding: "0.75rem 1.25rem", color: "#64748b", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {paginated.map((r, i) => (
-                <tr key={r.id} style={{ borderBottom: "1px solid #1f2937", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
-                  <td style={{ padding: "0.85rem 1.25rem", color: "#f3f4f6", fontWeight: 500 }}>{r.destination}</td>
-                  <td style={{ padding: "0.85rem 1rem", color: "#d1d5db" }}>
-                    <span style={{ background: "#1f2937", padding: "0.2rem 0.6rem", borderRadius: 4, fontSize: 12 }}>{r.carType}</span>
+                <tr key={r.id} style={{ borderBottom: "1px solid #e2e8f0", background: i % 2 === 0 ? "transparent" : "#f8fafc" }}>
+                  <td style={{ padding: "0.85rem 1.25rem", color: "#1e293b", fontWeight: 500 }}>{r.destination}</td>
+                  <td style={{ padding: "0.85rem 1rem", color: "#64748b" }}>
+                    <span style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", padding: "0.2rem 0.6rem", borderRadius: 4, fontSize: 12, color: "#1e293b" }}>{r.carType}</span>
                   </td>
                   <td style={{ padding: "0.85rem 1rem", color: "#D4AF37", fontWeight: 700, textAlign: "right" }}>
                     CA${r.tariff.toFixed(2)}
                   </td>
-                  <td style={{ padding: "0.85rem 1rem", color: "#d1d5db", textAlign: "right" }}>
+                  <td style={{ padding: "0.85rem 1rem", color: "#64748b", textAlign: "right" }}>
                     CA${(r.tariff * 0.05).toFixed(2)}
                   </td>
-                  <td style={{ padding: "0.85rem 1rem", color: "#d1d5db", textAlign: "right" }}>
+                  <td style={{ padding: "0.85rem 1rem", color: "#64748b", textAlign: "right" }}>
                     CA${(r.tariff * 0.13).toFixed(2)}
                   </td>
-                  <td style={{ padding: "0.85rem 1rem", color: "#d1d5db", textAlign: "right" }}>
+                  <td style={{ padding: "0.85rem 1rem", color: "#64748b", textAlign: "right" }}>
                     CA${(r.tariff * 0.15).toFixed(2)}
                   </td>
-                  <td style={{ padding: "0.85rem 1rem", color: "#4caf50", fontWeight: 600, textAlign: "right" }}>
+                  <td style={{ padding: "0.85rem 1rem", color: "#16a34a", fontWeight: 600, textAlign: "right" }}>
                     CA${(r.tariff * 1.33).toFixed(2)}
                   </td>
                   <td style={{ padding: "0.85rem 1.25rem", textAlign: "center" }}>
                     <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
                       <button onClick={() => openEdit(r)}
-                        style={{ padding: "0.35rem 0.85rem", background: "#1f2937", color: "#e5e7eb", border: "1px solid #374151", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>
+                        style={{ padding: "0.35rem 0.85rem", background: "#f1f5f9", color: "#1e293b", border: "1px solid #e2e8f0", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>
                         Edit
                       </button>
                       <button onClick={() => handleDelete(r.id)}
-                        style={{ padding: "0.35rem 0.85rem", background: "#7f1d1d", color: "#fca5a5", border: "1px solid #991b1b", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>
+                        style={{ padding: "0.35rem 0.85rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>
                         Delete
                       </button>
                     </div>
@@ -467,14 +467,14 @@ export default function AdminRatesPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div style={{ padding: "0.75rem 1.25rem", background: "#0a0a0a", borderTop: "1px solid #1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ padding: "0.75rem 1.25rem", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={safePage <= 1}
                 style={{
                   padding: "0.4rem 1rem", borderRadius: 4, fontSize: 13, cursor: safePage <= 1 ? "not-allowed" : "pointer",
-                  border: "1px solid #374151", background: "#0a0a0a",
-                  color: safePage <= 1 ? "#4b5563" : "#e5e7eb",
+                  border: "1px solid #e2e8f0", background: "#ffffff",
+                  color: safePage <= 1 ? "#94a3b8" : "#1e293b",
                 }}
               >
                 Previous
@@ -490,16 +490,16 @@ export default function AdminRatesPage() {
                   }, [])
                   .map((p, idx) =>
                     typeof p === "string" ? (
-                      <span key={`dots-${idx}`} style={{ color: "#6b7280", fontSize: 13, padding: "0 0.3rem" }}>…</span>
+                      <span key={`dots-${idx}`} style={{ color: "#94a3b8", fontSize: 13, padding: "0 0.3rem" }}>…</span>
                     ) : (
                       <button
                         key={p}
                         onClick={() => setPage(p)}
                         style={{
                           padding: "0.3rem 0.65rem", borderRadius: 4, fontSize: 13, cursor: "pointer",
-                          border: p === safePage ? "1px solid #D4AF37" : "1px solid #374151",
-                          background: p === safePage ? "rgba(212,175,55,0.15)" : "#0a0a0a",
-                          color: p === safePage ? "#D4AF37" : "#9ca3af",
+                          border: p === safePage ? "1px solid #D4AF37" : "1px solid #e2e8f0",
+                          background: p === safePage ? "rgba(212,175,55,0.1)" : "#ffffff",
+                          color: p === safePage ? "#D4AF37" : "#64748b",
                           fontWeight: p === safePage ? 600 : 400,
                         }}
                       >
@@ -514,8 +514,8 @@ export default function AdminRatesPage() {
                 disabled={safePage >= totalPages}
                 style={{
                   padding: "0.4rem 1rem", borderRadius: 4, fontSize: 13, cursor: safePage >= totalPages ? "not-allowed" : "pointer",
-                  border: "1px solid #374151", background: "#0a0a0a",
-                  color: safePage >= totalPages ? "#4b5563" : "#e5e7eb",
+                  border: "1px solid #e2e8f0", background: "#ffffff",
+                  color: safePage >= totalPages ? "#94a3b8" : "#1e293b",
                 }}
               >
                 Next
@@ -527,11 +527,11 @@ export default function AdminRatesPage() {
 
       {/* Fee Notes */}
       {!loading && filtered.length > 0 && (
-        <div style={{ marginTop: "1.25rem", padding: "1rem 1.25rem", background: "#020617", border: "1px solid #1f2937", borderRadius: 8, fontSize: 12, color: "#9ca3af", lineHeight: 1.8 }}>
+        <div style={{ marginTop: "1.25rem", padding: "1rem 1.25rem", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, color: "#64748b", lineHeight: 1.8 }}>
           <strong style={{ color: "#D4AF37" }}>Fee Breakdown:</strong><br />
-          • All rates are subject to <strong style={{ color: "#e5e7eb" }}>5% Fuel Surcharge</strong><br />
-          • All rates are subject to <strong style={{ color: "#e5e7eb" }}>13% HST</strong> (government tax)<br />
-          • All reservations are subject to <strong style={{ color: "#e5e7eb" }}>15% Driver Gratuity</strong>
+          • All rates are subject to <strong style={{ color: "#1e293b" }}>5% Fuel Surcharge</strong><br />
+          • All rates are subject to <strong style={{ color: "#1e293b" }}>13% HST</strong> (government tax)<br />
+          • All reservations are subject to <strong style={{ color: "#1e293b" }}>15% Driver Gratuity</strong>
         </div>
       )}
     </div>

@@ -363,7 +363,7 @@ export default function Reservation({
                 maxWidth: "100%",
                 maxHeight: "220px",
                 objectFit: "contain",
-                filter: "drop-shadow(0 10px 15px rgba(0,0,0,0.15))",
+                filter: "drop-shadow(0 10px 15px rgba(0,0,0,0.08))",
               }}
             />
           </div>
@@ -442,7 +442,7 @@ export default function Reservation({
                 <option key={dest} value={dest}>{dest}</option>
               ))}
             </select>
-            <small style={{ fontSize: 11, color: "#9ca3af", marginTop: 4, display: "block" }}>
+            <small style={{ fontSize: 11, color: "#64748b", marginTop: 4, display: "block" }}>
               Required for airport transfer flat-rate pricing.
             </small>
           </div>
@@ -457,10 +457,10 @@ export default function Reservation({
                 padding: "1.25rem 1.5rem",
                 marginBottom: "0.5rem",
               }}>
-                <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 1, marginBottom: "0.75rem" }}>
+                <div style={{ fontSize: 12, color: "#64748b", textTransform: "uppercase", letterSpacing: 1, marginBottom: "0.75rem" }}>
                   Estimated Fare — {formData.city} → {formData.carType}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem 1rem", fontSize: 14, color: "#d1d5db", marginBottom: "0.75rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem 1rem", fontSize: 14, color: "#475569", marginBottom: "0.75rem" }}>
                   <span>Base Rate:</span>
                   <span style={{ textAlign: "right" }}>CA${fare.base.toFixed(2)}</span>
                   <span>Fuel Surcharge (5%):</span>
@@ -477,10 +477,10 @@ export default function Reservation({
                   )}
                 </div>
                 <div style={{ borderTop: "1px solid rgba(212,175,55,0.2)", paddingTop: "0.6rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontWeight: 700, fontSize: 15 }}>Total (One Way)</span>
+                  <span style={{ fontWeight: 700, fontSize: 15, color: "#1e293b" }}>Total (One Way)</span>
                   <span style={{ color: "#D4AF37", fontWeight: 800, fontSize: 24 }}>CA${fare.total.toFixed(2)}</span>
                 </div>
-                <small style={{ fontSize: 11, color: "#6b7280", marginTop: "0.5rem", display: "block" }}>
+                <small style={{ fontSize: 11, color: "#64748b", marginTop: "0.5rem", display: "block" }}>
                   Rate is per vehicle, one way. 407 tolls and extra stops billed separately.
                 </small>
               </div>
@@ -488,12 +488,12 @@ export default function Reservation({
           ) : formData.city ? (
             <div className={`${styles.fullWidth}`}>
               <div style={{
-                background: "rgba(239,68,68,0.07)",
-                border: "1px solid rgba(239,68,68,0.25)",
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
                 borderRadius: 8,
                 padding: "0.85rem 1rem",
                 fontSize: 13,
-                color: "#fca5a5",
+                color: "#dc2626",
               }}>
                 No flat rate found for <strong>{formData.city}</strong>. Please call us at{" "}
                 <a href="tel:4166190050" style={{ color: "#D4AF37" }}>(416) 619-0050</a>{" "}
@@ -506,23 +506,23 @@ export default function Reservation({
           {formData.city && compareRates.length > 1 && (
             <div className={`${styles.fullWidth}`}>
               <div style={{
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
                 borderRadius: 10,
                 overflow: "hidden",
                 marginBottom: "0.5rem",
               }}>
-                <div style={{ padding: "0.75rem 1rem", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: "#e5e7eb" }}>
+                <div style={{ padding: "0.75rem 1rem", background: "#f1f5f9", borderBottom: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: "#1e293b" }}>
                     In other vehicles...
                   </span>
                 </div>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
                   <thead>
-                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                      <th style={{ textAlign: "left", padding: "0.6rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12 }}>Vehicle</th>
-                      <th style={{ textAlign: "center", padding: "0.6rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12 }}>Max. Passengers</th>
-                      <th style={{ textAlign: "right", padding: "0.6rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12 }}>Base Rate</th>
+                    <tr style={{ borderBottom: "1px solid #e2e8f0" }}>
+                      <th style={{ textAlign: "left", padding: "0.6rem 1rem", color: "#64748b", fontWeight: 500, fontSize: 12 }}>Vehicle</th>
+                      <th style={{ textAlign: "center", padding: "0.6rem 1rem", color: "#64748b", fontWeight: 500, fontSize: 12 }}>Max. Passengers</th>
+                      <th style={{ textAlign: "right", padding: "0.6rem 1rem", color: "#64748b", fontWeight: 500, fontSize: 12 }}>Base Rate</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -532,7 +532,7 @@ export default function Reservation({
                         <tr
                           key={cr.carType}
                           style={{
-                            borderBottom: "1px solid rgba(255,255,255,0.05)",
+                            borderBottom: "1px solid #e2e8f0",
                             cursor: "pointer",
                             transition: "background 0.15s",
                           }}
@@ -540,8 +540,8 @@ export default function Reservation({
                           onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(212,175,55,0.06)"; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                         >
-                          <td style={{ padding: "0.7rem 1rem", color: "#e5e7eb", fontWeight: 500 }}>{cr.carType}</td>
-                          <td style={{ padding: "0.7rem 1rem", color: "#d1d5db", textAlign: "center" }}>{cr.maxPassengers}</td>
+                          <td style={{ padding: "0.7rem 1rem", color: "#1e293b", fontWeight: 500 }}>{cr.carType}</td>
+                          <td style={{ padding: "0.7rem 1rem", color: "#475569", textAlign: "center" }}>{cr.maxPassengers}</td>
                           <td style={{ padding: "0.7rem 1rem", color: "#D4AF37", fontWeight: 600, textAlign: "right" }}>${cr.tariff.toFixed(2)}</td>
                         </tr>
                       ))}
@@ -580,7 +580,7 @@ export default function Reservation({
             <label>Pickup Date *</label>
             <input type="date" name="pickupDate" required
               onChange={handleChange} value={formData.pickupDate}
-              disabled={isFormDisabled} style={{ colorScheme: "dark" }} />
+              disabled={isFormDisabled} style={{ colorScheme: "light" }} />
           </div>
 
           <div className={styles.formGroup}>
@@ -588,7 +588,7 @@ export default function Reservation({
             <div style={{ display: "flex", gap: "0.5rem" }}>
               <input type="time" name="pickupTime" required step="60"
                 onChange={handleChange} value={formData.pickupTime}
-                disabled={isFormDisabled} style={{ flex: 1, colorScheme: "dark" }} />
+                disabled={isFormDisabled} style={{ flex: 1, colorScheme: "light" }} />
               <select name="pickupAmPm" onChange={handleChange}
                 value={formData.pickupAmPm} disabled={isFormDisabled}
                 style={{ width: 70 }}>
@@ -596,7 +596,7 @@ export default function Reservation({
                 <option value="PM">PM</option>
               </select>
             </div>
-            <small style={{ fontSize: 11, color: "#9ca3af", marginTop: 4, display: "block" }}>
+            <small style={{ fontSize: 11, color: "#64748b", marginTop: 4, display: "block" }}>
               Online reservations require at least 8 hours advance notice.
             </small>
           </div>
@@ -618,14 +618,14 @@ export default function Reservation({
                 <label>Return Date</label>
                 <input type="date" name="returnDate" onChange={handleChange}
                   value={formData.returnDate} disabled={isFormDisabled}
-                  style={{ colorScheme: "dark" }} />
+                  style={{ colorScheme: "light" }} />
               </div>
               <div className={styles.formGroup}>
                 <label>Return Time</label>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
                   <input type="time" name="returnTime" step="60"
                     onChange={handleChange} value={formData.returnTime}
-                    disabled={isFormDisabled} style={{ flex: 1, colorScheme: "dark" }} />
+                    disabled={isFormDisabled} style={{ flex: 1, colorScheme: "light" }} />
                   <select name="returnAmPm" onChange={handleChange}
                     value={formData.returnAmPm} disabled={isFormDisabled}
                     style={{ width: 70 }}>
@@ -661,7 +661,7 @@ export default function Reservation({
             <input type="text" name="extraStop"
               placeholder="Intermediate stop address (optional)"
               onChange={handleChange} value={formData.extraStop} disabled={isFormDisabled} />
-            <small style={{ fontSize: 11, color: "#9ca3af", marginTop: 4, display: "block" }}>
+            <small style={{ fontSize: 11, color: "#64748b", marginTop: 4, display: "block" }}>
               +$10 per 10 min wait / $15 per extra drop-off.
             </small>
           </div>
@@ -698,10 +698,10 @@ export default function Reservation({
                 style={{ width: 16, height: 16, marginTop: 2, accentColor: "#D4AF37", flexShrink: 0 }}
               />
               <span>
-                <strong style={{ color: "#fff" }}>Meet &amp; Greet Service</strong>
+                <strong style={{ color: "#1e293b" }}>Meet &amp; Greet Service</strong>
                 <span style={{ color: "#D4AF37", fontWeight: 700, marginLeft: 8 }}>+CA$49</span>
                 <br />
-                <small style={{ color: "#9ca3af", fontSize: 12 }}>
+                <small style={{ color: "#64748b", fontSize: 12 }}>
                   Your driver meets you inside the terminal at the arrivals gate with a name sign.
                 </small>
               </span>
@@ -734,7 +734,7 @@ export default function Reservation({
         {submitState === "submitting" && (
           <div style={{
             position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)",
+            background: "rgba(255,255,255,0.9)", backdropFilter: "blur(4px)",
             display: "flex", flexDirection: "column", alignItems: "center",
             justifyContent: "center", borderRadius: 16, zIndex: 100,
           }}>
@@ -747,7 +747,7 @@ export default function Reservation({
             <div style={{ color: "#D4AF37", fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
               Processing...
             </div>
-            <div style={{ color: "#9ca3af", fontSize: 14 }}>
+            <div style={{ color: "#64748b", fontSize: 14 }}>
               Please wait, you will be redirected to secure payment
             </div>
           </div>
@@ -756,7 +756,7 @@ export default function Reservation({
         {/* ── Error ── */}
         {submitError && submitState === "error" && (
           <div style={{
-            background: "#7f1d1d", border: "1px solid #991b1b", color: "#fca5a5",
+            background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626",
             padding: "1rem 1.25rem", borderRadius: 8, marginTop: "1.5rem",
             marginBottom: "1rem", fontSize: 14,
             display: "flex", alignItems: "flex-start", gap: "0.75rem",
@@ -767,7 +767,7 @@ export default function Reservation({
               <div style={{ fontSize: 13, opacity: 0.9 }}>{submitError}</div>
             </div>
             <button type="button" onClick={() => { setSubmitError(null); setSubmitState("idle"); }}
-              style={{ background: "transparent", border: "none", color: "#fca5a5", cursor: "pointer", fontSize: 20 }}>
+              style={{ background: "transparent", border: "none", color: "#dc2626", cursor: "pointer", fontSize: 20 }}>
               ×
             </button>
           </div>
@@ -776,7 +776,7 @@ export default function Reservation({
         {/* ── Success ── */}
         {submitState === "success" && (
           <div style={{
-            background: "#14532d", border: "1px solid #166534", color: "#86efac",
+            background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#16a34a",
             padding: "1rem 1.25rem", borderRadius: 8, marginTop: "1.5rem",
             marginBottom: "1rem", fontSize: 14,
             display: "flex", alignItems: "flex-start", gap: "0.75rem",
@@ -800,13 +800,13 @@ export default function Reservation({
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
               <div>
-                <div style={{ color: "#9ca3af", fontSize: 12, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
+                <div style={{ color: "#64748b", fontSize: 12, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
                   {formData.carType} — {formData.city}
                 </div>
                 <div style={{ color: "#D4AF37", fontSize: 30, fontWeight: 800, lineHeight: 1, marginBottom: 6 }}>
                   CA${fare.total.toFixed(2)}
                 </div>
-                <div style={{ color: "#6b7280", fontSize: 12 }}>
+                <div style={{ color: "#64748b", fontSize: 12 }}>
                   Base ${fare.base} + Fuel ${fare.fuel} + HST ${fare.hst} + Gratuity ${fare.gratuity}
                   {fare.meetGreetFee > 0 && ` + Meet & Greet $${fare.meetGreetFee}`}
                 </div>
@@ -856,17 +856,17 @@ export default function Reservation({
             </button>
 
             <div style={{ display: "flex", alignItems: "center", gap: "1rem", margin: "1rem 0" }}>
-              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
-              <span style={{ color: "#6b7280", fontSize: 12 }}>OR</span>
-              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+              <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
+              <span style={{ color: "#94a3b8", fontSize: 12 }}>OR</span>
+              <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
             </div>
 
             <button type="button" disabled={isFormDisabled} onClick={() => handleSubmit("quote")}
               style={{
                 width: "100%", padding: "0.9rem", fontSize: "0.9rem",
                 letterSpacing: 1, textTransform: "uppercase",
-                background: "transparent", border: "1px solid rgba(255,255,255,0.2)",
-                borderRadius: 8, color: "#9ca3af",
+                background: "transparent", border: "1px solid #d1d5db",
+                borderRadius: 8, color: "#64748b",
                 cursor: isFormDisabled ? "not-allowed" : "pointer",
                 opacity: isFormDisabled ? 0.6 : 1,
               }}>

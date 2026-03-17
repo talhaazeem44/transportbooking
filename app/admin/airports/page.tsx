@@ -102,10 +102,10 @@ export default function AdminAirportsPage() {
 
   const inputStyle: React.CSSProperties = {
     padding: "0.6rem 0.75rem",
-    background: "#0a0a0a",
-    border: "1px solid #374151",
+    background: "#ffffff",
+    border: "1px solid #d1d5db",
     borderRadius: 6,
-    color: "#e5e7eb",
+    color: "#1e293b",
     fontSize: 14,
     outline: "none",
   };
@@ -115,7 +115,7 @@ export default function AdminAirportsPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 2 }}>Airports</h1>
-          <p style={{ fontSize: 13, color: "#9ca3af" }}>
+          <p style={{ fontSize: 13, color: "#64748b" }}>
             Create an airport and all vehicle rates are auto-populated
           </p>
         </div>
@@ -128,22 +128,22 @@ export default function AdminAirportsPage() {
       </div>
 
       {error && (
-        <div style={{ background: "#7f1d1d", color: "#fca5a5", padding: "0.75rem 1rem", borderRadius: 6, marginBottom: "1rem", fontSize: 14 }}>
+        <div style={{ background: "#fef2f2", color: "#dc2626", padding: "0.75rem 1rem", borderRadius: 6, marginBottom: "1rem", fontSize: 14 }}>
           {error}
         </div>
       )}
       {success && (
-        <div style={{ background: "#14532d", color: "#86efac", padding: "0.75rem 1rem", borderRadius: 6, marginBottom: "1rem", fontSize: 14 }}>
+        <div style={{ background: "#f0fdf4", color: "#16a34a", padding: "0.75rem 1rem", borderRadius: 6, marginBottom: "1rem", fontSize: 14 }}>
           {success}
         </div>
       )}
 
       {showAdd && (
-        <div style={{ background: "#020617", border: "1px solid #1f2937", borderRadius: 10, padding: "1.5rem", marginBottom: "1.5rem" }}>
-          <h2 style={{ fontSize: 17, fontWeight: 600, marginBottom: "1rem", color: "#f3f4f6" }}>Add New Airport</h2>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "1.5rem", marginBottom: "1.5rem" }}>
+          <h2 style={{ fontSize: 17, fontWeight: 600, marginBottom: "1rem", color: "#1e293b" }}>Add New Airport</h2>
           <form onSubmit={handleAdd} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-end" }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", fontSize: 12, color: "#9ca3af", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              <label style={{ display: "block", fontSize: 12, color: "#64748b", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
                 Airport Name *
               </label>
               <input type="text" required placeholder="e.g. Toronto Pearson International"
@@ -151,7 +151,7 @@ export default function AdminAirportsPage() {
                 style={{ ...inputStyle, width: "100%" }} />
             </div>
             <div style={{ width: 120 }}>
-              <label style={{ display: "block", fontSize: 12, color: "#9ca3af", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              <label style={{ display: "block", fontSize: 12, color: "#64748b", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>
                 Code *
               </label>
               <input type="text" required placeholder="e.g. YYZ" maxLength={5}
@@ -159,65 +159,65 @@ export default function AdminAirportsPage() {
                 style={{ ...inputStyle, width: "100%", textTransform: "uppercase" }} />
             </div>
             <button type="submit" disabled={saving}
-              style={{ padding: "0.6rem 1.4rem", background: saving ? "#374151" : "#D4AF37", color: saving ? "#9ca3af" : "#000", border: "none", borderRadius: 6, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", fontSize: 14, whiteSpace: "nowrap" }}>
+              style={{ padding: "0.6rem 1.4rem", background: saving ? "#e2e8f0" : "#D4AF37", color: saving ? "#94a3b8" : "#000", border: "none", borderRadius: 6, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", fontSize: 14, whiteSpace: "nowrap" }}>
               {saving ? "Creating…" : "Create"}
             </button>
             <button type="button" onClick={() => setShowAdd(false)}
-              style={{ padding: "0.6rem 1.2rem", background: "#1f2937", color: "#e5e7eb", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 14 }}>
+              style={{ padding: "0.6rem 1.2rem", background: "#f1f5f9", color: "#1e293b", border: "1px solid #e2e8f0", borderRadius: 6, cursor: "pointer", fontSize: 14 }}>
               Cancel
             </button>
           </form>
-          <p style={{ fontSize: 12, color: "#6b7280", marginTop: "0.75rem" }}>
+          <p style={{ fontSize: 12, color: "#94a3b8", marginTop: "0.75rem" }}>
             All destinations × all vehicles will be auto-seeded with rates from the master rate sheet.
           </p>
         </div>
       )}
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "3rem", color: "#9ca3af" }}>Loading…</div>
+        <div style={{ textAlign: "center", padding: "3rem", color: "#94a3b8" }}>Loading…</div>
       ) : airports.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "3rem", color: "#9ca3af" }}>
+        <div style={{ textAlign: "center", padding: "3rem", color: "#94a3b8" }}>
           No airports yet. Click "+ Add Airport" to get started.
         </div>
       ) : (
-        <div style={{ background: "#020617", border: "1px solid #1f2937", borderRadius: 10, overflow: "hidden" }}>
-          <div style={{ padding: "0.75rem 1.25rem", background: "#0a0a0a", borderBottom: "1px solid #1f2937" }}>
-            <span style={{ fontSize: 13, color: "#9ca3af" }}>{airports.length} airport{airports.length !== 1 ? "s" : ""}</span>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, overflow: "hidden" }}>
+          <div style={{ padding: "0.75rem 1.25rem", background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+            <span style={{ fontSize: 13, color: "#64748b" }}>{airports.length} airport{airports.length !== 1 ? "s" : ""}</span>
           </div>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
             <thead>
-              <tr style={{ background: "#0a0a0a", borderBottom: "1px solid #1f2937" }}>
-                <th style={{ textAlign: "left", padding: "0.75rem 1.25rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Code</th>
-                <th style={{ textAlign: "left", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Name</th>
-                <th style={{ textAlign: "left", padding: "0.75rem 1rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Created</th>
-                <th style={{ textAlign: "center", padding: "0.75rem 1.25rem", color: "#9ca3af", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Actions</th>
+              <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+                <th style={{ textAlign: "left", padding: "0.75rem 1.25rem", color: "#64748b", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Code</th>
+                <th style={{ textAlign: "left", padding: "0.75rem 1rem", color: "#64748b", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Name</th>
+                <th style={{ textAlign: "left", padding: "0.75rem 1rem", color: "#64748b", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Created</th>
+                <th style={{ textAlign: "center", padding: "0.75rem 1.25rem", color: "#64748b", fontWeight: 500, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {airports.map((a, i) => (
-                <tr key={a.id} style={{ borderBottom: "1px solid #1f2937", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
+                <tr key={a.id} style={{ borderBottom: "1px solid #e2e8f0", background: i % 2 === 0 ? "transparent" : "#f8fafc" }}>
                   <td style={{ padding: "0.85rem 1.25rem", fontWeight: 600 }}>
                     {editingId === a.id ? (
                       <input type="text" value={editCode} onChange={(e) => setEditCode(e.target.value.toUpperCase())}
                         style={{ ...inputStyle, width: 80, textTransform: "uppercase" }} autoFocus />
                     ) : (
-                      <span style={{ background: "#1f2937", padding: "0.25rem 0.75rem", borderRadius: 4, fontSize: 13, color: "#D4AF37" }}>{a.code}</span>
+                      <span style={{ background: "#f1f5f9", padding: "0.25rem 0.75rem", borderRadius: 4, fontSize: 13, color: "#D4AF37" }}>{a.code}</span>
                     )}
                   </td>
-                  <td style={{ padding: "0.85rem 1rem", color: "#f3f4f6" }}>
+                  <td style={{ padding: "0.85rem 1rem", color: "#1e293b" }}>
                     {editingId === a.id ? (
                       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                         <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
                           onKeyDown={(e) => { if (e.key === "Enter") handleEdit(a.id); if (e.key === "Escape") setEditingId(null); }}
                           style={{ ...inputStyle, width: 250 }} />
                         <button onClick={() => handleEdit(a.id)} style={{ padding: "0.35rem 0.7rem", background: "#D4AF37", color: "#000", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>Save</button>
-                        <button onClick={() => setEditingId(null)} style={{ padding: "0.35rem 0.7rem", background: "#1f2937", color: "#e5e7eb", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>Cancel</button>
+                        <button onClick={() => setEditingId(null)} style={{ padding: "0.35rem 0.7rem", background: "#f1f5f9", color: "#1e293b", border: "1px solid #e2e8f0", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>Cancel</button>
                       </div>
                     ) : (
                       a.name
                     )}
                   </td>
-                  <td style={{ padding: "0.85rem 1rem", color: "#9ca3af", fontSize: 13 }}>
+                  <td style={{ padding: "0.85rem 1rem", color: "#64748b", fontSize: 13 }}>
                     {new Date(a.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </td>
                   <td style={{ padding: "0.85rem 1.25rem", textAlign: "center" }}>
@@ -228,11 +228,11 @@ export default function AdminAirportsPage() {
                           View Rates
                         </a>
                         <button onClick={() => { setEditingId(a.id); setEditName(a.name); setEditCode(a.code); }}
-                          style={{ padding: "0.35rem 0.85rem", background: "#1f2937", color: "#e5e7eb", border: "1px solid #374151", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>
+                          style={{ padding: "0.35rem 0.85rem", background: "#f1f5f9", color: "#1e293b", border: "1px solid #e2e8f0", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>
                           Edit
                         </button>
                         <button onClick={() => handleDelete(a)}
-                          style={{ padding: "0.35rem 0.85rem", background: "#7f1d1d", color: "#fca5a5", border: "1px solid #991b1b", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>
+                          style={{ padding: "0.35rem 0.85rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>
                           Delete
                         </button>
                       </div>

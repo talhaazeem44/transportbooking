@@ -1,6 +1,7 @@
 .services {
     padding: 8rem 0;
-    background-color: var(--secondary);
+    background-color: #f8fafc;
+    color: #1e293b;
 }
 
 .sectionHeader {
@@ -20,6 +21,7 @@
 .sectionTitle {
     font-size: 3rem;
     font-weight: 700;
+    color: #1e293b;
 }
 
 .grid {
@@ -34,6 +36,8 @@
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .cardImage {

@@ -31,13 +31,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "#f9fafb", display: "flex" }}>
+    <div style={{ minHeight: "100vh", background: "#f1f5f9", color: "#1e293b", display: "flex" }}>
       {/* Sidebar */}
       <aside
         style={{
           width: 260,
-          background: "#020617",
-          borderRight: "1px solid #1f2937",
+          background: "#ffffff",
+          borderRight: "1px solid #e2e8f0",
           padding: "1.5rem 0",
           position: "sticky",
           top: 0,
@@ -51,7 +51,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <h1 style={{ fontSize: 20, fontWeight: 700, color: "#D4AF37", marginBottom: 4 }}>
             TORONTO LIMO
           </h1>
-          <p style={{ fontSize: 12, color: "#9ca3af" }}>Admin Panel</p>
+          <p style={{ fontSize: 12, color: "#64748b" }}>Admin Panel</p>
         </div>
         <nav style={{ padding: "0 1rem", flex: 1 }}>
           {navItems.map((item) => {
@@ -65,17 +65,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   padding: "0.75rem 1rem",
                   borderRadius: 6,
                   marginBottom: 4,
-                  color: active ? "#D4AF37" : "#e5e7eb",
+                  color: active ? "#D4AF37" : "#1e293b",
                   textDecoration: "none",
                   fontSize: 14,
                   transition: "all 0.2s",
-                  background: active ? "#1f2937" : "transparent",
+                  background: active ? "rgba(212, 175, 55, 0.1)" : "transparent",
                   fontWeight: active ? 600 : 400,
                   cursor: "pointer",
                 }}
                 onMouseEnter={(e) => {
                   if (!active) {
-                    e.currentTarget.style.background = "#0a0a0a";
+                    e.currentTarget.style.background = "#f1f5f9";
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -89,9 +89,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-        <div style={{ padding: "1.5rem", borderTop: "1px solid #1f2937" }}>
-          <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 8 }}>
-            ✅ Authenticated
+        <div style={{ padding: "1.5rem", borderTop: "1px solid #e2e8f0" }}>
+          <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
+            Authenticated
           </div>
           <AdminLogoutButton />
         </div>
@@ -101,19 +101,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <main style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
         <header
           style={{
-            borderBottom: "1px solid #1f2937",
+            borderBottom: "1px solid #e2e8f0",
             padding: "1rem 2rem",
-            background: "#020617",
+            background: "#ffffff",
             position: "sticky",
             top: 0,
             zIndex: 10,
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: "#e5e7eb" }}>Admin Dashboard</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: "#1e293b" }}>Admin Dashboard</h2>
             <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
               <AdminNotifications />
-              <div style={{ fontSize: 13, color: "#9ca3af" }}>
+              <div style={{ fontSize: 13, color: "#475569" }}>
                 {new Date().toLocaleDateString("en-US", {
                   weekday: "long",
                   year: "numeric",
