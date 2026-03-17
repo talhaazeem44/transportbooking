@@ -43,6 +43,8 @@ export async function GET(req: NextRequest) {
     vehiclePreference: vehicleMap.get(String(r.vehiclePreferenceId)) ?? "",
     pickupAt: r.pickupAt,
     pickupAddress: r.pickupAddress,
+    paymentStatus: r.paymentStatus || "N/A",
+    amountPaid: r.amountPaid || 0,
   }));
 
   return NextResponse.json(data);

@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
   // Realtime admin notification
   try {
-    const io = getIo();
+    const io = getIo() || (global as any).tbIo || (global as any).io;
     console.log("[Reservation] Socket.IO instance:", io ? "Found" : "Not found");
     
     if (io) {

@@ -13,6 +13,8 @@ interface ReservationSummary {
   vehiclePreference: string;
   pickupAt: string;
   pickupAddress: string;
+  paymentStatus: string;
+  amountPaid: number;
 }
 
 export default function AdminReservationsPage() {
@@ -98,6 +100,7 @@ export default function AdminReservationsPage() {
                   <th style={{ padding: "1rem", textAlign: "left", fontSize: 13, fontWeight: 600 }}>Service</th>
                   <th style={{ padding: "1rem", textAlign: "left", fontSize: 13, fontWeight: 600 }}>Vehicle</th>
                   <th style={{ padding: "1rem", textAlign: "left", fontSize: 13, fontWeight: 600 }}>Pickup</th>
+                  <th style={{ padding: "1rem", textAlign: "left", fontSize: 13, fontWeight: 600 }}>Payment</th>
                   <th style={{ padding: "1rem", textAlign: "left", fontSize: 13, fontWeight: 600 }}>Actions</th>
                 </tr>
               </thead>
@@ -132,6 +135,44 @@ export default function AdminReservationsPage() {
                     <td style={{ padding: "1rem" }}>
                       <div style={{ fontSize: 13 }}>{new Date(r.pickupAt).toLocaleString()}</div>
                       <div style={{ fontSize: 12, color: "#9ca3af" }}>{r.pickupAddress}</div>
+                    </td>
+                    <td style={{ padding: "1rem" }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "0.25rem 0.75rem",
+                          borderRadius: 12,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          background:
+                            r.paymentStatus === "PAID"
+                              ? "#10b98120"
+                              : r.paymentStatus === "PENDING"
+                              ? "#f59e0b20"
+                              : r.paymentStatus === "FAILED"
+                              ? "#ef444420"
+                              : r.paymentStatus === "REFUNDED"
+                              ? "#8b5cf620"
+                              : "#6b728020",
+                          color:
+                            r.paymentStatus === "PAID"
+                              ? "#10b981"
+                              : r.paymentStatus === "PENDING"
+                              ? "#f59e0b"
+                              : r.paymentStatus === "FAILED"
+                              ? "#ef4444"
+                              : r.paymentStatus === "REFUNDED"
+                              ? "#8b5cf6"
+                              : "#6b7280",
+                        }}
+                      >
+                        {r.paymentStatus}
+                      </span>
+                      {r.amountPaid > 0 && (
+                        <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
+                          CA${(r.amountPaid / 100).toFixed(2)}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: "1rem" }}>
                       <select

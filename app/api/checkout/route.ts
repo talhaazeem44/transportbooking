@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { Reservation } from "@/models/Reservation";
 import { ServiceType } from "@/models/ServiceType";
 import { VehiclePreference } from "@/models/VehiclePreference";
+import { getIo } from "@/lib/socket";
 
 export async function POST(req: Request) {
   const json = await req.json().catch(() => null);
@@ -130,6 +131,31 @@ export async function POST(req: Request) {
     { _id: created._id } as any,
     { stripeSessionId: session.id } as any
   );
+
+  // Emit socket notification to admin
+  try {
+    const io = getIo() || (global as any).tbIo || (global as any).io;
+    if (io) {
+      io.emit("reservation:new", {
+        id: String(created._id),
+        createdAt: created.createdAt,
+        name: payload.name,
+        email: payload.email,
+        phone: payload.phone,
+        serviceType: (serviceType as any).name,
+        vehiclePreference: (vehiclePreference as any).name,
+        pickupAt,
+        pickupAddress: payload.pickupAddress,
+        destinationAddress: payload.destinationAddress,
+        paymentStatus: "PENDING",
+      });
+      console.log("[Checkout] Socket notification emitted for reservation:", String(created._id));
+    } else {
+      console.warn("[Checkout] Socket.IO instance not found - notification skipped");
+    }
+  } catch (err: any) {
+    console.error("[Checkout] Socket error:", err?.message);
+  }
 
   return NextResponse.json({ url: session.url });
 }

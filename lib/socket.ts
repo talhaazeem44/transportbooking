@@ -13,5 +13,5 @@ export function setIo(io: IOServer) {
 }
 
 export function getIo(): IOServer | undefined {
-  return globalThis.tbIo || globalThis.io;
+  return globalThis.tbIo || globalThis.io || (global as any).tbIo || (global as any).io;
 }

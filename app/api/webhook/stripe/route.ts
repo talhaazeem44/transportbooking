@@ -68,7 +68,7 @@ export async function POST(req: Request) {
 
     // Socket notification
     try {
-      const io = getIo();
+      const io = getIo() || (global as any).tbIo || (global as any).io;
       if (io) {
         io.emit("reservation:new", {
           id: String((reservation as any)._id),
@@ -83,6 +83,9 @@ export async function POST(req: Request) {
           destinationAddress: (reservation as any).destinationAddress,
           paymentStatus: "PAID",
         });
+        console.log("[Stripe Webhook] Socket notification emitted for reservation:", reservationId);
+      } else {
+        console.warn("[Stripe Webhook] Socket.IO instance not found - notification skipped. Make sure app is started via 'node server.js'");
       }
     } catch (err: any) {
       console.error("[Stripe Webhook] Socket error:", err?.message);
