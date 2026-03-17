@@ -95,6 +95,27 @@
     transform: translateY(0);
 }
 
+.cardRate {
+    display: inline-block;
+    margin-top: 0.6rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(212, 175, 55, 0.15);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    border-radius: 20px;
+    color: #D4AF37;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.4s ease 0.05s;
+}
+
+.card:hover .cardRate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 @media (max-width: 768px) {
     .sectionTitle {
         font-size: 2.5rem;

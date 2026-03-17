@@ -1,45 +1,8 @@
 "use client";
 import React from 'react';
+import Link from 'next/link';
 import styles from './Services.module.css';
-
-const services = [
-    {
-        title: "Airport Transfers",
-        description: "Punctual and stress-free rides to and from Pearson International, Billy Bishop, and more.",
-        icon: "✈️",
-        image: "https://images.unsplash.com/photo-1676107648535-931375db52e2?q=80&w=2070&auto=format&fit=crop"
-    },
-    {
-        title: "Corporate Excellence",
-        description: "Professional chauffeur services for executives and business travelers who value time and comfort.",
-        icon: "💼",
-        image: "https://images.unsplash.com/photo-1547731269-e4073e054f12?q=80&w=2114&auto=format&fit=crop"
-    },
-    {
-        title: "Weddings & Galas",
-        description: "Make your special day unforgettable with our elegant stretch limousines and premium service.",
-        icon: "💍",
-        image: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=2070&auto=format&fit=crop"
-    },
-    {
-        title: "Night on the Town",
-        description: "Safe, luxury transportation for parties, concerts, and sporting events throughout Toronto.",
-        icon: "🌃",
-        image: "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?q=80&w=2070&auto=format&fit=crop"
-    },
-    {
-        title: "Casino Expeditions",
-        description: "Unmatched style for your trips to Fallsview, Casino Rama, and other regional hotspots.",
-        icon: "🎰",
-        image: "https://images.unsplash.com/photo-1680516059579-fc0e573f9004?q=80&w=2070&auto=format&fit=crop"
-    },
-    {
-        title: "Special Ocassions",
-        description: "Proms, birthdays, and anniversaries—we provide the perfect ride for every milestone.",
-        icon: "✨",
-        image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=2069&auto=format&fit=crop"
-    },
-];
+import { servicesData } from '@/lib/servicesData';
 
 export default function Services() {
     return (
@@ -51,15 +14,16 @@ export default function Services() {
                 </div>
 
                 <div className={styles.grid}>
-                    {services.map((service, index) => (
-                        <div key={index} className={styles.card}>
+                    {servicesData.map((service) => (
+                        <Link key={service.slug} href={`/services/${service.slug}`} className={styles.card} style={{ textDecoration: 'none' }}>
                             <img src={service.image} alt={service.title} className={styles.cardImage} />
                             <div className={styles.cardOverlay}>
                                 <div className={styles.cardIcon}>{service.icon}</div>
                                 <h3 className={styles.cardTitle}>{service.title}</h3>
-                                <p className={styles.cardDescription}>{service.description}</p>
+                                <p className={styles.cardDescription}>{service.subtitle}</p>
+                                <div className={styles.cardRate}>{service.startingFrom}</div>
                             </div>
-                        </div>
+                        </Link>
                     ))}
                 </div>
             </div>

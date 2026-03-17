@@ -18,6 +18,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     { href: "/admin", label: "📊 Dashboard", icon: "📊" },
     { href: "/admin/vehicles", label: "🚗 Vehicles", icon: "🚗" },
     { href: "/admin/services", label: "🎯 Services", icon: "🎯" },
+    { href: "/admin/rates",        label: "💰 Rates",        icon: "💰" },
     { href: "/admin/reservations", label: "📋 Reservations", icon: "📋" },
   ];
 

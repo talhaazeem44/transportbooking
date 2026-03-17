@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error: "Invalid payload",
-        issues: parsed.error.flatten(),
+        issues: parsed.error.flatten((i: any) => i.message),
         details: parsed.error.issues.map(
           (e: any) => `${e.path.join(".")}: ${e.message}`
         ),
@@ -46,29 +46,35 @@ export async function POST(req: Request) {
     );
   }
 
-  // Determine base rate
-  let baseRate = (vehiclePreference as any).rate || 0;
-  
+  // Determine base rate using same logic as frontend
+  const vPref = vehiclePreference as any;
+  let baseRate = vPref.rate || 0;
+
   if (payload.city) {
-    const cityData = ratesData.find(c => c.city === payload.city);
+    const cityData = ratesData.find((c) => c.city === payload.city);
     if (cityData) {
-      const vPref = vehiclePreference as any;
-      const isPremium = vPref.name.toLowerCase().includes("suv") || 
-                        vPref.name.toLowerCase().includes("limo") || 
-                        vPref.name.toLowerCase().includes("sprinter") ||
-                        (vPref.category && vPref.category.toLowerCase().includes("business")) ||
-                        (vPref.category && vPref.category.toLowerCase().includes("elite"));
-      
+      const name = (vPref.name || "").toLowerCase();
+      const cat = (vPref.category || "").toLowerCase();
+      const premiumKeywords = [
+        "suv", "limo", "limousine", "sprinter", "stretch", "van",
+        "executive", "luxury", "premium", "business", "elite",
+        "escalade", "navigator", "suburban", "mercedes", "bmw",
+        "cadillac", "lincoln",
+      ];
+      const isPremium = premiumKeywords.some(
+        (k) => name.includes(k) || cat.includes(k)
+      );
       const cityRate = isPremium ? cityData.limo : cityData.taxi;
-      if (cityRate) {
-        baseRate = cityRate;
-      }
+      if (cityRate) baseRate = cityRate;
     }
   }
 
   if (baseRate <= 0) {
     return NextResponse.json(
-      { error: "This vehicle does not have a price set. Please contact us." },
+      {
+        error:
+          "No rate found for this city/vehicle combination. Please call us at (416) 619-0050 for a custom quote.",
+      },
       { status: 400 }
     );
   }

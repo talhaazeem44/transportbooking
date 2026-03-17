@@ -85,6 +85,69 @@
     color: var(--accent);
 }
 
+.contactLink {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    font-size: 0.9rem;
+}
+
+.contactLink:hover {
+    color: var(--accent);
+}
+
+.socialRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border-glass);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.socialLinks {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.socialLink {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.socialLink:hover {
+    background: rgba(212, 175, 55, 0.15);
+    color: var(--accent);
+    border-color: rgba(212, 175, 55, 0.4);
+}
+
+.paymentIcons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.paymentIcon {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.6);
+    padding: 0.3rem 0.65rem;
+    border-radius: 5px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
 .bottom {
     padding-top: 2rem;
     border-top: 1px solid var(--border-glass);

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ratesData } from "@/lib/ratesData";
 
 interface VehicleOption {
@@ -53,17 +53,16 @@ export default function RateCalculator() {
       return;
     }
 
-    // Determine base rate depending on vehicle category?
-    // Wait, the `ratesData` has `taxi` and `limo` rates.
-    // If the vehicle name includes 'suv' or 'limo', maybe we use `limo` rate?
-    // The reference site uses the rate based on vehicle type.
-    // We can check if `cityData.limo` is not null and vehicle is a limo/suv, or just default to taxi/limo based on the selected vehicle's own `rate`?
-    // Actually, `ratesData` has `taxi` and `limo` columns. But in Reservation we use the vehicle's own rate?
-    // Ah, wait! `ratesData` is per-city airport transfer rates. `vehicles` has an hourly/point-to-point rate? 
-    // In torontoairportlimo, base rate depends on city AND vehicle.
-    // Since we only have `taxi` and `limo` in `ratesData.ts`, we will use `limo` rate for SUV/Limo and `taxi` for sedan/taxi.
-    const isLimoOrSuv = selectedVehicle.toLowerCase().includes("suv") || selectedVehicle.toLowerCase().includes("limo") || selectedVehicle.toLowerCase().includes("sprinter");
-    const baseRate = isLimoOrSuv ? cityData.limo : cityData.taxi;
+    // Premium/limo-tier vehicles use cityData.limo, standard use cityData.taxi
+    const vehLower = selectedVehicle.toLowerCase();
+    const premiumKeywords = [
+      "suv", "limo", "limousine", "sprinter", "stretch", "van",
+      "executive", "luxury", "premium", "business", "elite",
+      "escalade", "navigator", "suburban", "mercedes", "bmw",
+      "cadillac", "lincoln",
+    ];
+    const isLimoTier = premiumKeywords.some(k => vehLower.includes(k));
+    const baseRate = isLimoTier ? cityData.limo : cityData.taxi;
 
     if (!baseRate) {
       setError("Rate not available for this combination. Please contact us.");
@@ -96,7 +95,7 @@ export default function RateCalculator() {
       <h2 style={{ fontSize: "2.5rem", fontWeight: "300", color: "#f3f4f6", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "1rem", marginBottom: "1.5rem" }}>
         Limo Rates Calculator
       </h2>
-      
+
       <p style={{ fontSize: "0.95rem", lineHeight: "1.6", color: "#d1d5db", marginBottom: "1rem" }}>
         <strong>Please Note:</strong> Rate estimates shown, represent the "one-way" cost "per vehicle" to/from the airport for each of the respective city/vehicle combinations; and are for the vehicle, not the number of passengers.
       </p>
@@ -112,10 +111,10 @@ export default function RateCalculator() {
 
       <div style={{ backgroundColor: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.1)", padding: "2rem", borderRadius: "8px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem", paddingBottom: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)", marginBottom: "1.5rem" }}>
-          
+
           <div style={{ display: "flex", flexDirection: "column" }}>
             <label style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "0.5rem" }}>City</label>
-            <select 
+            <select
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
               style={{ padding: "0.75rem", border: "none", borderBottom: "1px solid rgba(255,255,255,0.2)", backgroundColor: "#111827", fontSize: "1rem", color: "#f9fafb", outline: "none", cursor: "pointer" }}
@@ -128,21 +127,24 @@ export default function RateCalculator() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
-             <label style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "0.5rem" }}>Airport</label>
-            <select 
+            <label style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "0.5rem" }}>Airport</label>
+            <select
               value={selectedAirport}
               onChange={(e) => setSelectedAirport(e.target.value)}
               style={{ padding: "0.75rem", border: "none", borderBottom: "1px solid rgba(255,255,255,0.2)", backgroundColor: "#111827", fontSize: "1rem", color: "#f9fafb", outline: "none", cursor: "pointer" }}
             >
-              <option value="Toronto Pearson Airport (YYZ)">Toronto Pearson Airport (YYZ)</option>
-              <option value="Billy Bishop Airport (YTZ)">Billy Bishop Airport (YTZ)</option>
-              <option value="John C. Munro Hamilton (YHM)">John C. Munro Hamilton (YHM)</option>
+              <option value="Toronto Pearson Airport (YYZ)">YYZ – Toronto Pearson International</option>
+              <option value="Billy Bishop Airport (YTZ)">YTZ – Billy Bishop Toronto City</option>
+              <option value="Downsview Airport (YZD)">YZD – Downsview Airport</option>
+              <option value="John C. Munro Hamilton (YHM)">YHM – John C. Munro Hamilton</option>
+              <option value="Buffalo Niagara Airport (BUF)">BUF – Buffalo Niagara International</option>
+              <option value="Niagara Falls Airport (IAG)">IAG – Niagara Falls International</option>
             </select>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
-             <label style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "0.5rem" }}>Vehicle</label>
-            <select 
+            <label style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "0.5rem" }}>Vehicle</label>
+            <select
               value={selectedVehicle}
               onChange={(e) => setSelectedVehicle(e.target.value)}
               style={{ padding: "0.75rem", border: "none", borderBottom: "1px solid rgba(255,255,255,0.2)", backgroundColor: "#111827", fontSize: "1rem", color: "#f9fafb", outline: "none", cursor: "pointer" }}
@@ -162,8 +164,8 @@ export default function RateCalculator() {
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginBottom: "2rem", padding: "1.5rem", background: "rgba(0,0,0,0.2)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
                 <img src={selectedVehObj.image} alt={selectedVehObj.name} style={{ maxWidth: "100%", maxHeight: "250px", objectFit: "contain", filter: "drop-shadow(0 10px 15px rgba(0,0,0,0.5))", marginBottom: "1rem" }} />
                 <div style={{ display: "flex", gap: "1.5rem", color: "#d1d5db", fontSize: "0.95rem" }}>
-                   {selectedVehObj.passengers && <span><strong>Passengers:</strong> Up to {selectedVehObj.passengers}</span>}
-                   {selectedVehObj.bags && <span><strong>Luggage:</strong> Up to {selectedVehObj.bags}</span>}
+                  {selectedVehObj.passengers && <span><strong>Passengers:</strong> Up to {selectedVehObj.passengers}</span>}
+                  {selectedVehObj.bags && <span><strong>Luggage:</strong> Up to {selectedVehObj.bags}</span>}
                 </div>
               </div>
             );
@@ -189,7 +191,7 @@ export default function RateCalculator() {
             </label>
           </div>
 
-          <button 
+          <button
             onClick={handleGetRates}
             style={{ backgroundColor: "#4caf50", color: "white", border: "none", padding: "0.75rem 2rem", fontSize: "1rem", fontWeight: "600", borderRadius: "4px", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
           >
@@ -201,7 +203,7 @@ export default function RateCalculator() {
         {calculatedRate && (
           <div style={{ backgroundColor: "rgba(76, 175, 80, 0.1)", borderLeft: "4px solid #4caf50", padding: "1.5rem", borderRadius: "4px", marginBottom: "2rem" }}>
             <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#ffffff", marginBottom: "0.5rem" }}>
-              Estimated Total: CA${calculatedRate.total.toFixed(2)}
+              Estimated Total: ${calculatedRate.total.toFixed(2)}
             </div>
             <div style={{ fontSize: "0.95rem", color: "#9ca3af", fontStyle: "italic" }}>
               (Base Rate: ${calculatedRate.base.toFixed(2)} + 5% Fuel Surcharge + 13% HST + 15% Driver Gratuity)
@@ -210,9 +212,9 @@ export default function RateCalculator() {
         )}
 
         <div style={{ marginTop: "2rem" }}>
-          <button 
-             onClick={scrollToReservation}
-             style={{ backgroundColor: "#6366f1", color: "white", border: "none", padding: "0.75rem 1.5rem", fontSize: "0.95rem", fontWeight: "500", borderRadius: "4px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.5rem", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
+          <button
+            onClick={scrollToReservation}
+            style={{ backgroundColor: "#6366f1", color: "white", border: "none", padding: "0.75rem 1.5rem", fontSize: "0.95rem", fontWeight: "500", borderRadius: "4px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.5rem", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 20h14"></path><path d="M5 4v16"></path><path d="M19 4v16"></path><path d="M5 8h14"></path><path d="M5 12h14"></path><path d="M5 16h14"></path><circle cx="9" cy="4" r="1"></circle><circle cx="15" cy="4" r="1"></circle></svg>
             BOOK YOUR LIMO NOW

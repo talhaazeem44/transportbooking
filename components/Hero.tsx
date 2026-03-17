@@ -10,16 +10,24 @@ export default function Hero() {
       <div className={`container ${styles.heroContent}`}>
         <div className={styles.heroTextWrapper}>
           <h1 className={styles.heroTitle}>
-            Elevate Your <span className={styles.accentText}>Journey</span>
-            <br /> Toronto's Elite Chauffeur Service
+            Flat Rate Limo Ride <span className={styles.accentText}>To/From Airport</span>
           </h1>
           <p className={styles.heroSubtitle}>
-            Experience unparalleled luxury, punctuality, and comfort with our premium fleet.
-            From airport transfers to special events, we redefine sophisticated travel.
+            Prompt airport taxi service to/from Toronto, Buffalo and Hamilton Airports.
+            Reliable. Affordable. Convenient — available 24/7, 365 days a year.
           </p>
+          <div className={styles.heroBadges}>
+            <span className={styles.badge}>✓ No Hidden Fees</span>
+            <span className={styles.badge}>✓ Free Wi-Fi On Board</span>
+            <span className={styles.badge}>✓ Flight Tracking</span>
+          </div>
           <div className={styles.heroActions}>
-            <Link href="#book" className={`btn-primary ${styles.heroBtn}`}>Instant Reservation</Link>
-            <button className={`btn-outline ${styles.heroBtn}`}>View Our Fleet</button>
+            <Link href="#book" className={`btn-primary ${styles.heroBtn}`}>Book Online Now</Link>
+            <Link href="#fleet" className={`btn-outline ${styles.heroBtn}`}>View Our Fleet</Link>
+          </div>
+          <div className={styles.heroContact}>
+            <span>Call us 24/7:</span>
+            <a href="tel:4166190050" className={styles.heroPhone}>(416) 619-0050</a>
           </div>
         </div>
 
