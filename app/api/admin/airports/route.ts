@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   });
 
   // Get all vehicles
-  const vehicles = await VehiclePreference.find({}).lean();
+  const vehicles = await VehiclePreference.find({} as any).lean();
 
   // Seed rates: for each vehicle × each destination
   const rateDocs: any[] = [];

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const rates = await (Rate as any).find({ destination, airport }).lean();
 
   // Get all vehicles to include passengers
-  const vehicles = await VehiclePreference.find({}).lean();
+  const vehicles = await VehiclePreference.find({} as any).lean();
   const vehicleMap: Record<string, number> = {};
   for (const v of vehicles) {
     vehicleMap[v.name] = v.passengers ?? 4;

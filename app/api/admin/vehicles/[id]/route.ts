@@ -21,7 +21,7 @@ export async function PATCH(
   await dbConnect();
 
   // Get old name to update rates if renamed
-  const existing = await VehiclePreference.findById(id).lean();
+  const existing = await (VehiclePreference as any).findById(id).lean();
   const oldName = existing?.name;
   const newName = name.trim();
 
@@ -63,7 +63,7 @@ export async function DELETE(
   await dbConnect();
 
   // Get vehicle name to delete related rates
-  const vehicle = await VehiclePreference.findById(id).lean();
+  const vehicle = await (VehiclePreference as any).findById(id).lean();
   if (vehicle?.name) {
     await (Rate as any).deleteMany({ carType: vehicle.name });
   }
