@@ -1,8 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import styles from './Navbar.module.css';
-import { servicesData } from '@/lib/servicesData';
 
 interface Vehicle {
   id: string;
@@ -16,6 +14,8 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileVehiclesOpen, setMobileVehiclesOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,7 +24,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Load vehicles from API
   useEffect(() => {
     fetch('/api/vehicles')
       .then((r) => r.json())
@@ -32,7 +31,6 @@ export default function Navbar() {
       .catch(() => {});
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -44,80 +42,115 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className={`${styles.navbar} ${isScrolled ? styles.navbarScrolled : ''}`}>
+    <nav className={`nav-wrap${isScrolled ? ' scrolled' : ''}`}>
       {/* Top contact bar */}
-      <div className={styles.topBar}>
-        <div className="container" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1.5rem', padding: '0.4rem 1.5rem' }}>
-          <a href="tel:4166190050" className={styles.topPhone}>
+      <div className="nav-topbar">
+        <div className="container">
+          <a href="tel:4166190050" className="nav-top-link">
             <span>📞</span> (416) 619-0050
           </a>
-          <a href="mailto:reservations@torontoairportlimo.com" className={styles.topEmail}>
+          <a href="mailto:reservations@torontoairportlimo.com" className="nav-top-link">
             <span>✉</span> reservations@torontoairportlimo.com
           </a>
         </div>
       </div>
 
       {/* Main nav */}
-      <div className={`container ${styles.navContent}`}>
-        <Link href="/" className={styles.logo}>
-          <span className={styles.logoText}>TORONTO</span>
-          <span className={styles.logoAccent}>AIRPORT LIMO</span>
-        </Link>
+      <div className="nav-main">
+        <div className="container nav-content">
+          <Link href="/" className="nav-logo">
+            <span className="nav-logo-text">TORONTO</span>
+            <span className="nav-logo-accent">AIRPORT LIMO</span>
+          </Link>
 
-        <div className={styles.navLinks}>
-          <Link href="#services">Services</Link>
+          <div className="nav-links">
+            <Link href="#services">Services</Link>
 
-          {/* Vehicles dropdown */}
-          <div className={styles.dropdown} ref={dropdownRef}>
-            <button
-              className={styles.dropdownTrigger}
-              onClick={() => setDropdownOpen((prev) => !prev)}
-              aria-expanded={dropdownOpen}
-            >
-              Vehicles
-              <svg
-                className={`${styles.chevron} ${dropdownOpen ? styles.chevronOpen : ''}`}
-                width="12" height="12" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" strokeWidth="2.5"
-                strokeLinecap="round" strokeLinejoin="round"
+            {/* Vehicles dropdown */}
+            <div className="nav-dropdown" ref={dropdownRef}>
+              <button
+                className="nav-dropdown-btn"
+                onClick={() => setDropdownOpen((prev) => !prev)}
+                aria-expanded={dropdownOpen}
               >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
+                Vehicles
+                <svg
+                  className={`nav-chevron${dropdownOpen ? ' open' : ''}`}
+                  width="12" height="12" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" strokeWidth="2.5"
+                  strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
 
-            {dropdownOpen && (
-              <div className={styles.dropdownMenu}>
-                {vehicles.length === 0 ? (
-                  <div className={styles.dropdownEmpty}>Loading...</div>
-                ) : (
-                  vehicles.map((v) => (
-                    <Link
-                      key={v.id}
-                      href={`/vehicles/${v.id}`}
-                      className={styles.dropdownItem}
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      {v.image && (
-                        <img
-                          src={v.image}
-                          alt={v.name}
-                          style={{ width: 40, height: 28, objectFit: "contain", flexShrink: 0, background: "rgba(0,0,0,0.05)", borderRadius: 3, padding: 2 }}
-                        />
-                      )}
-                      <span>{v.name}</span>
-                      {v.passengers ? <span style={{ marginLeft: "auto", fontSize: 11, color: "#64748b" }}>{v.passengers} pax</span> : null}
-                    </Link>
-                  ))
-                )}
-              </div>
-            )}
+              {dropdownOpen && (
+                <div className="nav-dropdown-menu">
+                  {vehicles.length === 0 ? (
+                    <div className="nav-dropdown-empty">Loading...</div>
+                  ) : (
+                    vehicles.map((v) => (
+                      <Link
+                        key={v.id}
+                        href={`/vehicles/${v.id}`}
+                        className="nav-dropdown-item"
+                        onClick={() => setDropdownOpen(false)}
+                      >
+                        {v.image && (
+                          <img
+                            src={v.image}
+                            alt={v.name}
+                            style={{ width: 40, height: 28, objectFit: 'contain', flexShrink: 0, background: 'rgba(0,0,0,0.05)', borderRadius: 3, padding: 2 }}
+                          />
+                        )}
+                        <span>{v.name}</span>
+                        {v.passengers ? <span style={{ marginLeft: 'auto', fontSize: 11, color: '#64748b' }}>{v.passengers} pax</span> : null}
+                      </Link>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            <Link href="/rates">Rates</Link>
+            <Link href="#about">About</Link>
+            <Link href="#book" className="btn-primary nav-cta">Book Now</Link>
           </div>
 
-          <Link href="/rates">Rates</Link>
-          <Link href="#about">About</Link>
-          <Link href="#book" className={`btn-primary ${styles.navCta}`}>Book Now</Link>
+          {/* Hamburger */}
+          <button
+            className="nav-hamburger"
+            onClick={() => setMobileOpen((p) => !p)}
+            aria-label="Toggle menu"
+          >
+            <span />
+            <span />
+            <span />
+          </button>
         </div>
       </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="nav-mobile-menu">
+          <Link href="#services" onClick={() => setMobileOpen(false)}>Services</Link>
+          <button onClick={() => setMobileVehiclesOpen((p) => !p)}>
+            Vehicles {mobileVehiclesOpen ? '▲' : '▼'}
+          </button>
+          {mobileVehiclesOpen && (
+            <div className="nav-mobile-sub">
+              {vehicles.map((v) => (
+                <Link key={v.id} href={`/vehicles/${v.id}`} onClick={() => setMobileOpen(false)}>
+                  {v.name}
+                </Link>
+              ))}
+            </div>
+          )}
+          <Link href="/rates" onClick={() => setMobileOpen(false)}>Rates</Link>
+          <Link href="#about" onClick={() => setMobileOpen(false)}>About</Link>
+          <Link href="#book" onClick={() => setMobileOpen(false)}>Book Now</Link>
+        </div>
+      )}
     </nav>
   );
 }

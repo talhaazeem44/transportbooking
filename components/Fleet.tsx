@@ -1,12 +1,10 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import styles from './Fleet.module.css';
+import { useState, useEffect } from 'react';
 import Reservation from './Reservation';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 
-// Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -50,11 +48,11 @@ export default function Fleet() {
 
   if (loading) {
     return (
-      <section id="fleet" className={styles.fleet}>
+      <section id="fleet" className="fleet-section">
         <div className="container">
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionSubtitle}>Our Collection</span>
-            <h2 className={styles.sectionTitle}>The Fleet Of Excellence</h2>
+          <div className="fleet-header">
+            <span className="sec-subtitle">Our Collection</span>
+            <h2 className="sec-title">The Fleet Of Excellence</h2>
           </div>
           <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
             Loading vehicles...
@@ -65,11 +63,11 @@ export default function Fleet() {
   }
 
   return (
-    <section id="fleet" className={styles.fleet}>
+    <section id="fleet" className="fleet-section">
       <div className="container">
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionSubtitle}>Our Collection</span>
-          <h2 className={styles.sectionTitle}>The Fleet Of Excellence</h2>
+        <div className="fleet-header">
+          <span className="sec-subtitle">Our Collection</span>
+          <h2 className="sec-title">The Fleet Of Excellence</h2>
         </div>
 
         {vehicles.length === 0 ? (
@@ -77,91 +75,60 @@ export default function Fleet() {
             No vehicles available at the moment.
           </div>
         ) : (
-          <div className={styles.carouselContainer}>
+          <div className="fleet-carousel">
             <Swiper
               modules={[Navigation, Pagination, Autoplay]}
-              spaceBetween={30}
+              spaceBetween={24}
               slidesPerView={1}
               navigation
               pagination={{ clickable: true }}
               autoplay={{ delay: 5000, disableOnInteraction: false }}
               breakpoints={{
-                640: {
-                  slidesPerView: 1,
-                },
-                768: {
-                  slidesPerView: 2,
-                },
-                1024: {
-                  slidesPerView: 3,
-                },
+                768:  { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
               }}
-              className={styles.swiper}
             >
               {vehicles.map((vehicle) => (
                 <SwiperSlide key={vehicle.id}>
-                  <div className={styles.vehicleCard}>
-                    <div className={styles.imageWrapper}>
+                  <div className="fleet-card">
+                    <div className="fleet-img-wrap">
                       {vehicle.image ? (
-                        <>
-                          <img
-                            src={vehicle.image.startsWith('http') ? vehicle.image : vehicle.image}
-                            alt={vehicle.name}
-                            className={styles.vehicleImage}
-                            loading="lazy"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
-                          <div
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              background: '#f1f5f9',
-                              display: 'none',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#64748b',
-                            }}
-                          >
-                            Image not available
-                          </div>
-                        </>
+                        <img
+                          src={vehicle.image}
+                          alt={vehicle.name}
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
                       ) : (
-                        <div style={{ width: '100%', height: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 13 }}>
                           No Image
                         </div>
                       )}
                     </div>
-                    <div className={styles.content}>
+                    <div className="fleet-body">
                       {vehicle.category && (
-                        <span className={styles.category}>{vehicle.category}</span>
+                        <span className="fleet-category">{vehicle.category}</span>
                       )}
-                      <h3 className={styles.name}>{vehicle.name}</h3>
-                      <div className={styles.specs}>
-                        <div className={styles.specItem}>
-                          <span>👥</span> {vehicle.passengers || 0}
-                        </div>
-                        <div className={styles.specItem}>
-                          <span>🧳</span> {vehicle.luggage || 0}
-                        </div>
+                      <h3 className="fleet-name">{vehicle.name}</h3>
+                      <div className="fleet-specs">
+                        <div className="fleet-spec"><span>👥</span> {vehicle.passengers || 0} pax</div>
+                        <div className="fleet-spec"><span>🧳</span> {vehicle.luggage || 0} bags</div>
                       </div>
                       {vehicle.rate > 0 && (
-                        <div style={{ marginTop: "0.5rem", marginBottom: "0.5rem" }}>
-                          <span style={{ fontSize: "20px", fontWeight: 700, color: "#D4AF37" }}>
-                            ${vehicle.rate.toFixed(2)}
-                          </span>
-                          <span style={{ fontSize: "14px", color: "#64748b", marginLeft: "4px" }}>CAD</span>
+                        <div className="fleet-rate">
+                          ${vehicle.rate.toFixed(2)}
+                          <span>CAD</span>
                         </div>
                       )}
                       {vehicle.description && (
-                        <p className={styles.description}>{vehicle.description}</p>
+                        <p className="fleet-desc">{vehicle.description}</p>
                       )}
                       <button
-                        className={`btn-primary ${styles.bookBtn}`}
+                        className="btn-primary fleet-book-btn"
                         onClick={() => handleBookNow(vehicle.name)}
                       >
                         Book Now

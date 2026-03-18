@@ -1,6 +1,4 @@
 "use client";
-import React from 'react';
-import styles from './Testimonials.module.css';
 
 const testimonials = [
   {
@@ -41,28 +39,26 @@ const sourceIcons: Record<string, string> = {
 
 export default function Testimonials() {
   return (
-    <section className={styles.testimonials}>
+    <section className="test-section">
       <div className="container">
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionSubtitle}>What Our Clients Say</span>
-          <h2 className={styles.sectionTitle}>Trusted By Thousands of Travellers</h2>
+        <div className="test-header">
+          <span className="sec-subtitle">What Our Clients Say</span>
+          <h2 className="sec-title">Trusted By Thousands of Travellers</h2>
         </div>
-        <div className={styles.grid}>
+        <div className="test-grid">
           {testimonials.map((t, i) => (
-            <div key={i} className={styles.card}>
-              <div className={styles.cardTop}>
-                <div className={styles.avatar}>{t.avatar}</div>
+            <div key={i} className="test-card">
+              <div className="test-top">
+                <div className="test-avatar">{t.avatar}</div>
                 <div>
-                  <div className={styles.name}>{t.name}</div>
-                  <div className={styles.source}>
+                  <div className="test-name">{t.name}</div>
+                  <div className="test-source">
                     <span>{sourceIcons[t.source]}</span> {t.source}
                   </div>
                 </div>
-                <div className={styles.stars}>
-                  {"★".repeat(t.rating)}
-                </div>
+                <div className="test-stars">{"★".repeat(t.rating)}</div>
               </div>
-              <p className={styles.text}>"{t.text}"</p>
+              <p className="test-text">"{t.text}"</p>
             </div>
           ))}
         </div>

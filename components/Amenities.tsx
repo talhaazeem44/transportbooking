@@ -1,6 +1,4 @@
 "use client";
-import React from 'react';
-import styles from './Amenities.module.css';
 
 const amenities = [
   { icon: "📶", title: "Complimentary Wi-Fi", desc: "Stay connected on every ride with high-speed Wi-Fi in all our vehicles." },
@@ -13,36 +11,36 @@ const amenities = [
 
 export default function Amenities() {
   return (
-    <section className={styles.amenities}>
+    <section className="amen-section">
       <div className="container">
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionSubtitle}>Why Choose Us</span>
-          <h2 className={styles.sectionTitle}>Reliable. Affordable. Convenient.</h2>
-          <p className={styles.sectionDesc}>
+        <div className="amen-header">
+          <span className="sec-subtitle">Why Choose Us</span>
+          <h2 className="sec-title">Reliable. Affordable. Convenient.</h2>
+          <p className="sec-desc">
             Every ride includes premium amenities at no extra charge — because your comfort is our priority.
           </p>
         </div>
-        <div className={styles.grid}>
+        <div className="amen-grid">
           {amenities.map((a, i) => (
-            <div key={i} className={styles.card}>
-              <div className={styles.icon}>{a.icon}</div>
-              <h3 className={styles.title}>{a.title}</h3>
-              <p className={styles.desc}>{a.desc}</p>
+            <div key={i} className="amen-card">
+              <div className="amen-icon">{a.icon}</div>
+              <h3 className="amen-title">{a.title}</h3>
+              <p className="amen-desc">{a.desc}</p>
             </div>
           ))}
         </div>
 
-        <div className={styles.meetGreet}>
-          <div className={styles.meetGreetContent}>
-            <div className={styles.meetGreetIcon}>🤝</div>
+        <div className="amen-meet">
+          <div className="amen-meet-inner">
+            <div className="amen-meet-icon">🤝</div>
             <div>
-              <h3 className={styles.meetGreetTitle}>Meet &amp; Greet Service Available</h3>
-              <p className={styles.meetGreetDesc}>
+              <h3 className="amen-meet-title">Meet &amp; Greet Service Available</h3>
+              <p className="amen-meet-desc">
                 Our driver will meet you inside the airport terminal at the arrivals gate, holding a sign with your name.
                 Personalized airport pickup for a seamless arrival experience.
               </p>
             </div>
-            <div className={styles.meetGreetPrice}>+$49</div>
+            <div className="amen-meet-price">+$49</div>
           </div>
         </div>
       </div>
