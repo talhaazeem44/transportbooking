@@ -26,10 +26,10 @@ export default function AdminLogoutButton() {
         style={{
           width: "100%",
           padding: "0.5rem",
-          background: loggingOut ? "#374151" : "#1f2937",
-          border: "1px solid #374151",
+          background: loggingOut ? "#e2e8f0" : "#f1f5f9",
+          border: "1px solid #e2e8f0",
           borderRadius: 6,
-          color: "#e5e7eb",
+          color: "#475569",
           fontSize: 12,
           cursor: loggingOut ? "not-allowed" : "pointer",
           transition: "all 0.2s",

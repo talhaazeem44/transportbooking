@@ -27,7 +27,7 @@ export default function AdminNotifications() {
     // Connect to Socket.IO server (same origin as the app)
     const socketUrl = window.location.origin;
     console.log("[Notifications] Connecting to Socket.IO at:", socketUrl);
-    
+
     const socket = io(socketUrl, {
       transports: ["websocket", "polling"],
       path: "/socket.io",
@@ -50,7 +50,7 @@ export default function AdminNotifications() {
       console.log("[Notifications] 🔔 New reservation received:", data);
       setNotifications((prev) => [data, ...prev]);
       setUnreadCount((prev) => prev + 1);
-      
+
       // Show browser notification if permitted
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification(`New Reservation: ${data.name}`, {
@@ -100,7 +100,7 @@ export default function AdminNotifications() {
           position: "relative",
           background: "transparent",
           border: "none",
-          color: "#e5e7eb",
+          color: "#475569",
           cursor: "pointer",
           padding: "0.5rem",
           borderRadius: 6,
@@ -150,26 +150,26 @@ export default function AdminNotifications() {
               top: "100%",
               right: 0,
               marginTop: "0.5rem",
-              background: "#020617",
-              border: "1px solid #1f2937",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
               borderRadius: 8,
               width: 400,
               maxHeight: 500,
               overflowY: "auto",
-              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.5)",
+              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.12)",
               zIndex: 999,
             }}
           >
             <div
               style={{
                 padding: "1rem",
-                borderBottom: "1px solid #1f2937",
+                borderBottom: "1px solid #e2e8f0",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
-              <h3 style={{ fontSize: 16, fontWeight: 600 }}>Notifications</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 600, color: "#1e293b" }}>Notifications</h3>
               {notifications.length > 0 && (
                 <button
                   onClick={() => {
@@ -179,7 +179,7 @@ export default function AdminNotifications() {
                   style={{
                     background: "transparent",
                     border: "none",
-                    color: "#9ca3af",
+                    color: "#64748b",
                     cursor: "pointer",
                     fontSize: 12,
                   }}
@@ -194,7 +194,7 @@ export default function AdminNotifications() {
                   style={{
                     padding: "2rem",
                     textAlign: "center",
-                    color: "#9ca3af",
+                    color: "#64748b",
                     fontSize: 14,
                   }}
                 >
@@ -209,30 +209,30 @@ export default function AdminNotifications() {
                     style={{
                       display: "block",
                       padding: "1rem",
-                      borderBottom: "1px solid #1f2937",
+                      borderBottom: "1px solid #e2e8f0",
                       textDecoration: "none",
                       color: "inherit",
                       transition: "background 0.2s",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#1f2937";
+                      e.currentTarget.style.background = "#f8fafc";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = "transparent";
                     }}
                   >
-                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, color: "#1e293b" }}>
                       New Reservation: {notif.name}
                     </div>
-                    <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>
+                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>
                       {notif.serviceType} · {notif.vehiclePreference}
                     </div>
                     {notif.pickupAddress && (
-                      <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 2 }}>
+                      <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 2 }}>
                         📍 {notif.pickupAddress}
                       </div>
                     )}
-                    <div style={{ fontSize: 11, color: "#6b7280" }}>
+                    <div style={{ fontSize: 11, color: "#94a3b8" }}>
                       {new Date(notif.createdAt).toLocaleString()}
                     </div>
                   </Link>

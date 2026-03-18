@@ -1,10 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ratesData } from "@/lib/ratesData";
 
 interface Vehicle {
   id: string;
@@ -17,26 +16,11 @@ interface Vehicle {
   rate: number;
 }
 
-const PREMIUM_KEYWORDS = [
-  "suv","limo","limousine","sprinter","stretch","van",
-  "executive","luxury","premium","business","elite",
-  "escalade","navigator","suburban","mercedes","bmw",
-  "cadillac","lincoln",
-];
-
-function isLimoTier(name: string) {
-  const n = name.toLowerCase();
-  return PREMIUM_KEYWORDS.some(k => n.includes(k));
+interface AirportOption {
+  id: string;
+  name: string;
+  code: string;
 }
-
-const AIRPORTS = [
-  "YYZ – Toronto Pearson International",
-  "YTZ – Billy Bishop Toronto City",
-  "YZD – Downsview Airport",
-  "YHM – John C. Munro Hamilton",
-  "BUF – Buffalo Niagara International",
-  "IAG – Niagara Falls International",
-];
 
 export default function VehiclePage() {
   const { id } = useParams<{ id: string }>();
@@ -47,46 +31,161 @@ export default function VehiclePage() {
   const [loading, setLoading] = useState(true);
 
   // Rate calculator state
-  const [city, setCity] = useState("");
-  const [airport, setAirport] = useState(AIRPORTS[0]);
+  const [airportsList, setAirportsList] = useState<AirportOption[]>([]);
+  const [selectedAirport, setSelectedAirport] = useState("");
+  const [airportSearch, setAirportSearch] = useState("");
+  const [showAirportDropdown, setShowAirportDropdown] = useState(false);
+
+  const [allDestinations, setAllDestinations] = useState<string[]>([]);
+  const [loadingCities, setLoadingCities] = useState(true);
+  const [citySearch, setCitySearch] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(50);
+
   const [direction, setDirection] = useState<"to" | "from">("to");
   const [rateResult, setRateResult] = useState<{
     base: number; fuel: number; hst: number; gratuity: number; total: number;
   } | null>(null);
   const [rateError, setRateError] = useState<string | null>(null);
 
+  const cityDropdownRef = useRef<HTMLDivElement>(null);
+  const airportDropdownRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Load vehicle data + airports
   useEffect(() => {
     Promise.all([
       fetch(`/api/vehicles/${id}`).then(r => r.json()),
       fetch("/api/vehicles").then(r => r.json()),
-    ]).then(([veh, all]) => {
+      fetch("/api/airports").then(r => r.json()),
+    ]).then(([veh, all, airports]) => {
       if (veh.error) { router.replace("/"); return; }
       setVehicle(veh);
       setAllVehicles((all.items || []).filter((v: Vehicle) => v.id !== id));
+      setAirportsList(Array.isArray(airports) ? airports : []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [id]);
 
-  const handleGetRates = () => {
+  // Load cities when airport changes
+  useEffect(() => {
+    const airportCode = selectedAirport || "YYZ";
+    const loadCities = async () => {
+      setLoadingCities(true);
+      try {
+        const res = await fetch(`/api/rates/destinations/all?airport=${encodeURIComponent(airportCode)}`);
+        const data = await res.json();
+        setAllDestinations(Array.isArray(data) ? data : []);
+      } catch {
+        setAllDestinations([]);
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+    loadCities();
+    setRateResult(null);
+    setSelectedCity("");
+    setCitySearch("");
+  }, [selectedAirport]);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(e.target as Node)) setShowCityDropdown(false);
+      if (airportDropdownRef.current && !airportDropdownRef.current.contains(e.target as Node)) setShowAirportDropdown(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const airportOptions = useMemo(() =>
+    airportsList.map((a) => ({ value: a.code, label: `${a.code} – ${a.name}` })),
+    [airportsList]
+  );
+
+  const filteredAirports = airportOptions.filter((a) =>
+    a.label.toLowerCase().includes(airportSearch.toLowerCase())
+  );
+
+  const filteredCities = allDestinations.filter((c) =>
+    c.toLowerCase().includes(citySearch.toLowerCase())
+  );
+  const visibleCities = filteredCities.slice(0, visibleCount);
+
+  const handleScroll = () => {
+    if (!listRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+    if (scrollTop + clientHeight >= scrollHeight - 20) {
+      setVisibleCount((prev) => Math.min(prev + 50, filteredCities.length));
+    }
+  };
+
+  useEffect(() => { setVisibleCount(50); }, [citySearch]);
+
+  const handleGetRates = async () => {
     setRateError(null);
     setRateResult(null);
-    if (!city) { setRateError("Please select a city first."); return; }
-    const cityData = ratesData.find(c => c.city === city);
-    if (!cityData) { setRateError("Rate not found for this city. Please call us."); return; }
-    const limo = vehicle ? isLimoTier(vehicle.name) : false;
-    const base = limo ? cityData.limo : cityData.taxi;
-    if (!base) { setRateError("Rate not available for this combination. Please contact us."); return; }
-    const fuel = +(base * 0.05).toFixed(2);
-    const hst = +(base * 0.13).toFixed(2);
-    const gratuity = +(base * 0.15).toFixed(2);
-    const total = +(base + fuel + hst + gratuity).toFixed(2);
-    setRateResult({ base, fuel, hst, gratuity, total });
+    if (!selectedCity) { setRateError("Please select a city first."); return; }
+    if (!vehicle) return;
+
+    const airportCode = selectedAirport || "YYZ";
+    try {
+      const res = await fetch(`/api/rates/lookup?carType=${encodeURIComponent(vehicle.name)}&destination=${encodeURIComponent(selectedCity)}&airport=${encodeURIComponent(airportCode)}`);
+      if (!res.ok) {
+        setRateError("Rate not found for this combination. Please contact us.");
+        return;
+      }
+      const data = await res.json();
+      const base = data.tariff;
+      const fuel = +(base * 0.05).toFixed(2);
+      const hst = +(base * 0.13).toFixed(2);
+      const gratuity = +(base * 0.15).toFixed(2);
+      const total = +(base + fuel + hst + gratuity).toFixed(2);
+      setRateResult({ base, fuel, hst, gratuity, total });
+    } catch {
+      setRateError("Something went wrong. Please try again.");
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "0.65rem 0.75rem",
+    background: "#EFEBE0",
+    border: "1px solid #E4DFD2",
+    borderRadius: 6,
+    color: "#12172B",
+    fontSize: 14,
+    outline: "none",
+  };
+
+  const dropdownMenuStyle: React.CSSProperties = {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    maxHeight: 250,
+    overflowY: "auto",
+    background: "#ffffff",
+    border: "1px solid #E4DFD2",
+    borderRadius: "0 0 6px 6px",
+    zIndex: 999,
+    boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+  };
+
+  const dropdownItemStyle: React.CSSProperties = {
+    padding: "0.6rem 1rem",
+    cursor: "pointer",
+    fontSize: 14,
+    color: "#12172B",
+    borderBottom: "1px solid #F7F4EE",
+    transition: "background 0.1s",
   };
 
   if (loading) return (
     <main>
       <Navbar />
-      <div style={{ paddingTop: 120, textAlign: "center", color: "#9ca3af", fontSize: 18 }}>Loading...</div>
+      <div style={{ paddingTop: 120, textAlign: "center", color: "#6C6C82", fontSize: 18 }}>Loading...</div>
       <Footer />
     </main>
   );
@@ -94,18 +193,18 @@ export default function VehiclePage() {
   if (!vehicle) return null;
 
   return (
-    <main style={{ backgroundColor: "#0a0a0a", minHeight: "100vh" }}>
+    <main style={{ backgroundColor: "#F7F4EE", minHeight: "100vh" }}>
       <Navbar />
       <div style={{ paddingTop: 90 }}>
 
         {/* Breadcrumb */}
-        <div style={{ background: "#111827", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0.75rem 1.5rem" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto", fontSize: 13, color: "#6b7280" }}>
-            <Link href="/" style={{ color: "#9ca3af", textDecoration: "none" }}>Home</Link>
+        <div style={{ background: "#EFEBE0", borderBottom: "1px solid #E4DFD2", padding: "0.75rem 1.5rem" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto", fontSize: 13, color: "#6C6C82" }}>
+            <Link href="/" style={{ color: "#6C6C82", textDecoration: "none" }}>Home</Link>
             <span style={{ margin: "0 0.5rem" }}>›</span>
-            <Link href="/#fleet" style={{ color: "#9ca3af", textDecoration: "none" }}>Vehicles</Link>
+            <Link href="/#fleet" style={{ color: "#6C6C82", textDecoration: "none" }}>Vehicles</Link>
             <span style={{ margin: "0 0.5rem" }}>›</span>
-            <span style={{ color: "#D4AF37" }}>{vehicle.name}</span>
+            <span style={{ color: "#C9952A" }}>{vehicle.name}</span>
           </div>
         </div>
 
@@ -114,20 +213,20 @@ export default function VehiclePage() {
 
             {/* LEFT — Vehicle detail */}
             <div>
-              <h1 style={{ fontSize: "2.2rem", fontWeight: 300, color: "#f9fafb", marginBottom: "0.25rem" }}>
+              <h1 style={{ fontSize: "2.2rem", fontWeight: 300, color: "#12172B", marginBottom: "0.25rem" }}>
                 {vehicle.name}
               </h1>
-              <p style={{ color: "#D4AF37", fontSize: 13, textTransform: "uppercase", letterSpacing: 2, marginBottom: "1.5rem" }}>
+              <p style={{ color: "#C9952A", fontSize: 13, textTransform: "uppercase", letterSpacing: 2, marginBottom: "1.5rem" }}>
                 {vehicle.category || "Luxury Vehicle"}
               </p>
 
               {/* Vehicle image */}
               {vehicle.image && (
-                <div style={{ background: "#111827", borderRadius: 12, overflow: "hidden", marginBottom: "1.5rem", border: "1px solid rgba(255,255,255,0.06)", textAlign: "center", padding: "1.5rem" }}>
+                <div style={{ background: "#ffffff", borderRadius: 12, overflow: "hidden", marginBottom: "1.5rem", border: "1px solid #E4DFD2", textAlign: "center", padding: "1.5rem", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
                   <img
                     src={vehicle.image}
                     alt={vehicle.name}
-                    style={{ maxWidth: "100%", maxHeight: 320, objectFit: "contain", filter: "drop-shadow(0 10px 30px rgba(0,0,0,0.6))" }}
+                    style={{ maxWidth: "100%", maxHeight: 320, objectFit: "contain" }}
                   />
                 </div>
               )}
@@ -135,14 +234,14 @@ export default function VehiclePage() {
               {/* Specs row */}
               <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
                 {vehicle.passengers > 0 && (
-                  <div style={{ background: "#111827", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "0.75rem 1.25rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "#d1d5db", fontSize: 14 }}>
-                    <svg width="18" height="18" fill="none" stroke="#D4AF37" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <div style={{ background: "#ffffff", border: "1px solid #E4DFD2", borderRadius: 8, padding: "0.75rem 1.25rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "#12172B", fontSize: 14 }}>
+                    <svg width="18" height="18" fill="none" stroke="#C9952A" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     Up to <strong>{vehicle.passengers}</strong> passengers
                   </div>
                 )}
                 {vehicle.luggage > 0 && (
-                  <div style={{ background: "#111827", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "0.75rem 1.25rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "#d1d5db", fontSize: 14 }}>
-                    <svg width="18" height="18" fill="none" stroke="#D4AF37" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                  <div style={{ background: "#ffffff", border: "1px solid #E4DFD2", borderRadius: 8, padding: "0.75rem 1.25rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "#12172B", fontSize: 14 }}>
+                    <svg width="18" height="18" fill="none" stroke="#C9952A" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
                     Up to <strong>{vehicle.luggage}</strong> luggage pieces
                   </div>
                 )}
@@ -150,73 +249,128 @@ export default function VehiclePage() {
 
               {/* Description */}
               {vehicle.description && (
-                <div style={{ background: "#111827", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "1.5rem", marginBottom: "2rem" }}>
-                  <h3 style={{ color: "#f3f4f6", fontWeight: 500, marginBottom: "0.75rem", fontSize: 16 }}>About this Vehicle</h3>
-                  <p style={{ color: "#9ca3af", lineHeight: 1.7, fontSize: 14 }}>{vehicle.description}</p>
+                <div style={{ background: "#ffffff", border: "1px solid #E4DFD2", borderRadius: 10, padding: "1.5rem", marginBottom: "2rem", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+                  <h3 style={{ color: "#12172B", fontWeight: 500, marginBottom: "0.75rem", fontSize: 16 }}>About this Vehicle</h3>
+                  <p style={{ color: "#6C6C82", lineHeight: 1.7, fontSize: 14 }}>{vehicle.description}</p>
                 </div>
               )}
 
-              {/* Rate Calculator */}
-              <div style={{ background: "#111827", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "1.75rem", marginBottom: "2rem" }}>
-                <h2 style={{ fontSize: "1.5rem", fontWeight: 300, color: "#f3f4f6", marginBottom: "0.5rem" }}>
+              {/* Rate Calculator — Dynamic */}
+              <div style={{ background: "#ffffff", border: "1px solid #E4DFD2", borderRadius: 12, padding: "1.75rem", marginBottom: "2rem", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+                <h2 style={{ fontSize: "1.5rem", fontWeight: 300, color: "#12172B", marginBottom: "0.5rem" }}>
                   {vehicle.name} — Rate Calculator
                 </h2>
-                <p style={{ color: "#6b7280", fontSize: 12, marginBottom: "1.25rem" }}>
+                <p style={{ color: "#6C6C82", fontSize: 12, marginBottom: "1.25rem" }}>
                   One-way cost per vehicle · 5% Fuel Surcharge · 13% HST · 15% Driver Gratuity
                 </p>
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "1.25rem" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>City</label>
-                    <select
-                      value={city}
-                      onChange={e => { setCity(e.target.value); setRateResult(null); }}
-                      style={{ width: "100%", padding: "0.65rem 0.75rem", background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, color: "#f9fafb", fontSize: 14, outline: "none" }}
-                    >
-                      <option value="">Select your city</option>
-                      {ratesData.map(r => <option key={r.city} value={r.city}>{r.city}</option>)}
-                    </select>
+                  {/* Airport — searchable dropdown */}
+                  <div ref={airportDropdownRef}>
+                    <label style={{ display: "block", fontSize: 11, color: "#6C6C82", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Airport</label>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="text"
+                        placeholder="Search airport..."
+                        value={showAirportDropdown ? airportSearch : (airportOptions.find(a => a.value === selectedAirport)?.label || airportSearch)}
+                        onChange={(e) => { setAirportSearch(e.target.value); setSelectedAirport(""); setShowAirportDropdown(true); }}
+                        onFocus={() => { setShowAirportDropdown(true); setAirportSearch(""); }}
+                        autoComplete="off"
+                        style={inputStyle}
+                      />
+                      {showAirportDropdown && (
+                        <div style={dropdownMenuStyle}>
+                          {filteredAirports.length === 0 ? (
+                            <div style={{ padding: "0.75rem 1rem", color: "#94a3b8", fontSize: 14 }}>No airports found</div>
+                          ) : (
+                            filteredAirports.map((a) => (
+                              <div
+                                key={a.value}
+                                onMouseDown={(e) => { e.preventDefault(); setSelectedAirport(a.value); setAirportSearch(a.label); setShowAirportDropdown(false); }}
+                                style={dropdownItemStyle}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(201,149,42,0.1)"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                              >
+                                {a.label}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div>
-                    <label style={{ display: "block", fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Airport</label>
-                    <select
-                      value={airport}
-                      onChange={e => setAirport(e.target.value)}
-                      style={{ width: "100%", padding: "0.65rem 0.75rem", background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, color: "#f9fafb", fontSize: 14, outline: "none" }}
-                    >
-                      {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
-                    </select>
+                  {/* City — searchable with lazy loading */}
+                  <div ref={cityDropdownRef}>
+                    <label style={{ display: "block", fontSize: 11, color: "#6C6C82", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>City</label>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="text"
+                        placeholder={loadingCities ? "Loading cities..." : "Type to search city..."}
+                        value={showCityDropdown ? citySearch : selectedCity || citySearch}
+                        onChange={(e) => { setCitySearch(e.target.value); setSelectedCity(""); setShowCityDropdown(true); }}
+                        onFocus={() => { setShowCityDropdown(true); setCitySearch(""); }}
+                        disabled={loadingCities}
+                        autoComplete="off"
+                        style={{ ...inputStyle, cursor: loadingCities ? "wait" : "text", color: loadingCities ? "#94a3b8" : "#12172B" }}
+                      />
+                      {showCityDropdown && !loadingCities && (
+                        <div ref={listRef} onScroll={handleScroll} style={dropdownMenuStyle}>
+                          {visibleCities.length === 0 ? (
+                            <div style={{ padding: "0.75rem 1rem", color: "#94a3b8", fontSize: 14 }}>
+                              No cities found for &quot;{citySearch}&quot;
+                            </div>
+                          ) : (
+                            visibleCities.map((city) => (
+                              <div
+                                key={city}
+                                onMouseDown={(e) => { e.preventDefault(); setSelectedCity(city); setCitySearch(city); setShowCityDropdown(false); setRateResult(null); }}
+                                style={dropdownItemStyle}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(201,149,42,0.1)"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                              >
+                                {city}
+                              </div>
+                            ))
+                          )}
+                          {visibleCities.length < filteredCities.length && (
+                            <div style={{ padding: "0.5rem 1rem", color: "#94a3b8", fontSize: 12, textAlign: "center" }}>
+                              Scroll for more... ({filteredCities.length - visibleCities.length} remaining)
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div style={{ display: "flex", gap: "1.5rem", marginBottom: "1.25rem" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", color: "#d1d5db", fontSize: 14 }}>
-                    <input type="radio" name="dir" checked={direction === "to"} onChange={() => setDirection("to")} style={{ accentColor: "#4caf50" }} />
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", color: "#12172B", fontSize: 14 }}>
+                    <input type="radio" name="dir" checked={direction === "to"} onChange={() => setDirection("to")} style={{ accentColor: "#C9952A" }} />
                     Going TO airport
                   </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", color: "#d1d5db", fontSize: 14 }}>
-                    <input type="radio" name="dir" checked={direction === "from"} onChange={() => setDirection("from")} style={{ accentColor: "#4caf50" }} />
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", color: "#12172B", fontSize: 14 }}>
+                    <input type="radio" name="dir" checked={direction === "from"} onChange={() => setDirection("from")} style={{ accentColor: "#C9952A" }} />
                     Coming FROM airport
                   </label>
                 </div>
 
                 {rateError && (
-                  <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 6, padding: "0.75rem 1rem", color: "#fca5a5", fontSize: 13, marginBottom: "1rem" }}>
+                  <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, padding: "0.75rem 1rem", color: "#dc2626", fontSize: 13, marginBottom: "1rem" }}>
                     {rateError}
                   </div>
                 )}
 
                 {rateResult && (
-                  <div style={{ background: "rgba(76,175,80,0.08)", border: "1px solid rgba(76,175,80,0.3)", borderRadius: 8, padding: "1.25rem", marginBottom: "1.25rem" }}>
-                    <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#4caf50", marginBottom: "0.4rem" }}>
+                  <div style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 8, padding: "1.25rem", marginBottom: "1.25rem" }}>
+                    <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#16a34a", marginBottom: "0.4rem" }}>
                       CA${rateResult.total.toFixed(2)}
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.3rem 1rem", fontSize: 13, color: "#9ca3af" }}>
-                      <span>Base Rate:</span><span style={{ textAlign: "right", color: "#d1d5db" }}>CA${rateResult.base.toFixed(2)}</span>
-                      <span>Fuel Surcharge (5%):</span><span style={{ textAlign: "right", color: "#d1d5db" }}>CA${rateResult.fuel.toFixed(2)}</span>
-                      <span>HST (13%):</span><span style={{ textAlign: "right", color: "#d1d5db" }}>CA${rateResult.hst.toFixed(2)}</span>
-                      <span>Driver Gratuity (15%):</span><span style={{ textAlign: "right", color: "#d1d5db" }}>CA${rateResult.gratuity.toFixed(2)}</span>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.3rem 1rem", fontSize: 13, color: "#6C6C82" }}>
+                      <span>Base Rate:</span><span style={{ textAlign: "right", color: "#12172B" }}>CA${rateResult.base.toFixed(2)}</span>
+                      <span>Fuel Surcharge (5%):</span><span style={{ textAlign: "right", color: "#12172B" }}>CA${rateResult.fuel.toFixed(2)}</span>
+                      <span>HST (13%):</span><span style={{ textAlign: "right", color: "#12172B" }}>CA${rateResult.hst.toFixed(2)}</span>
+                      <span>Driver Gratuity (15%):</span><span style={{ textAlign: "right", color: "#12172B" }}>CA${rateResult.gratuity.toFixed(2)}</span>
                     </div>
                   </div>
                 )}
@@ -224,13 +378,13 @@ export default function VehiclePage() {
                 <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
                   <button
                     onClick={handleGetRates}
-                    style={{ background: "#4caf50", color: "#fff", border: "none", padding: "0.75rem 1.75rem", borderRadius: 6, fontSize: 14, fontWeight: 600, cursor: "pointer", letterSpacing: 0.5 }}
+                    style={{ background: "#16a34a", color: "#fff", border: "none", padding: "0.75rem 1.75rem", borderRadius: 6, fontSize: 14, fontWeight: 600, cursor: "pointer", letterSpacing: 0.5 }}
                   >
                     GET RATES
                   </button>
                   <Link
                     href="/#reservation-section"
-                    style={{ background: "#D4AF37", color: "#000", padding: "0.75rem 1.75rem", borderRadius: 6, fontSize: 14, fontWeight: 600, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+                    style={{ background: "#C9952A", color: "#fff", padding: "0.75rem 1.75rem", borderRadius: 6, fontSize: 14, fontWeight: 600, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
                   >
                     BOOK THIS VEHICLE
                   </Link>
@@ -238,9 +392,9 @@ export default function VehiclePage() {
               </div>
 
               {/* Services list */}
-              <div style={{ background: "#111827", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "1.5rem" }}>
-                <h3 style={{ color: "#f3f4f6", fontWeight: 500, marginBottom: "1rem", fontSize: 16 }}>Services Available</h3>
-                <ul style={{ margin: 0, padding: "0 0 0 1.25rem", color: "#9ca3af", fontSize: 14, lineHeight: 2.1 }}>
+              <div style={{ background: "#ffffff", border: "1px solid #E4DFD2", borderRadius: 10, padding: "1.5rem", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+                <h3 style={{ color: "#12172B", fontWeight: 500, marginBottom: "1rem", fontSize: 16 }}>Services Available</h3>
+                <ul style={{ margin: 0, padding: "0 0 0 1.25rem", color: "#6C6C82", fontSize: 14, lineHeight: 2.1 }}>
                   <li>Airport Transfers (YYZ, YTZ, YHM, BUF, IAG)</li>
                   <li>Point-to-Point Service</li>
                   <li>Corporate & Business Travel</li>
@@ -255,7 +409,7 @@ export default function VehiclePage() {
             {/* RIGHT — Other vehicles sidebar */}
             <aside>
               <div style={{ position: "sticky", top: 100 }}>
-                <h3 style={{ color: "#f3f4f6", fontSize: 15, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                <h3 style={{ color: "#12172B", fontSize: 15, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: "1px solid #E4DFD2" }}>
                   Other Vehicles
                 </h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -263,19 +417,19 @@ export default function VehiclePage() {
                     <Link
                       key={v.id}
                       href={`/vehicles/${v.id}`}
-                      style={{ display: "flex", alignItems: "center", gap: "0.75rem", background: "#111827", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, padding: "0.75rem", textDecoration: "none", transition: "border-color 0.2s" }}
+                      style={{ display: "flex", alignItems: "center", gap: "0.75rem", background: "#ffffff", border: "1px solid #E4DFD2", borderRadius: 8, padding: "0.75rem", textDecoration: "none", transition: "border-color 0.2s" }}
                     >
                       {v.image ? (
-                        <img src={v.image} alt={v.name} style={{ width: 72, height: 48, objectFit: "contain", flexShrink: 0, background: "#0a0a0a", borderRadius: 4, padding: 2 }} />
+                        <img src={v.image} alt={v.name} style={{ width: 72, height: 48, objectFit: "contain", flexShrink: 0, background: "#EFEBE0", borderRadius: 4, padding: 2 }} />
                       ) : (
-                        <div style={{ width: 72, height: 48, background: "#0f172a", borderRadius: 4, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <svg width="24" height="24" fill="none" stroke="#374151" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2h-2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                        <div style={{ width: 72, height: 48, background: "#EFEBE0", borderRadius: 4, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="24" height="24" fill="none" stroke="#C9952A" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2h-2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
                         </div>
                       )}
                       <div>
-                        <div style={{ color: "#f3f4f6", fontSize: 13, fontWeight: 500, lineHeight: 1.3 }}>{v.name}</div>
+                        <div style={{ color: "#12172B", fontSize: 13, fontWeight: 500, lineHeight: 1.3 }}>{v.name}</div>
                         {v.passengers > 0 && (
-                          <div style={{ color: "#6b7280", fontSize: 11, marginTop: 2 }}>Up to {v.passengers} pax</div>
+                          <div style={{ color: "#6C6C82", fontSize: 11, marginTop: 2 }}>Up to {v.passengers} pax</div>
                         )}
                       </div>
                     </Link>

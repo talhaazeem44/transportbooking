@@ -10,7 +10,7 @@ export default function BookingCancelPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#0a0a0a",
+        background: "#F7F4EE",
         padding: "2rem",
       }}
     >
@@ -18,11 +18,12 @@ export default function BookingCancelPage() {
         style={{
           maxWidth: 520,
           width: "100%",
-          background: "#111",
-          border: "1px solid #222",
+          background: "#ffffff",
+          border: "1px solid #E4DFD2",
           borderRadius: 16,
           padding: "3rem 2.5rem",
           textAlign: "center",
+          boxShadow: "0 8px 28px rgba(0,0,0,0.08)",
         }}
       >
         <div
@@ -30,19 +31,20 @@ export default function BookingCancelPage() {
             width: 72,
             height: 72,
             borderRadius: "50%",
-            background: "rgba(239, 68, 68, 0.15)",
+            background: "rgba(239, 68, 68, 0.1)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             margin: "0 auto 1.5rem",
             fontSize: 36,
+            color: "#dc2626",
           }}
         >
           ✕
         </div>
         <h1
           style={{
-            color: "#fff",
+            color: "#12172B",
             fontSize: 28,
             fontWeight: 700,
             marginBottom: "0.75rem",
@@ -52,7 +54,7 @@ export default function BookingCancelPage() {
         </h1>
         <p
           style={{
-            color: "#9ca3af",
+            color: "#6C6C82",
             fontSize: 16,
             lineHeight: 1.6,
             marginBottom: "2rem",
@@ -65,8 +67,8 @@ export default function BookingCancelPage() {
           href="/#book"
           style={{
             display: "inline-block",
-            background: "#D4AF37",
-            color: "#000",
+            background: "#C9952A",
+            color: "#fff",
             padding: "0.85rem 2.5rem",
             borderRadius: 8,
             fontWeight: 600,

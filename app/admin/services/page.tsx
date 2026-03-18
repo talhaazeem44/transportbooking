@@ -78,17 +78,17 @@ export default function AdminServicesPage() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700 }}>Service Types</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: "#1e293b" }}>Service Types</h1>
       </div>
 
       {error && (
-        <div style={{ background: "#7f1d1d", color: "#fca5a5", padding: "0.75rem", borderRadius: 6, marginBottom: "1rem" }}>
+        <div style={{ background: "#fef2f2", color: "#dc2626", padding: "0.75rem", borderRadius: 6, marginBottom: "1rem", border: "1px solid #fecaca" }}>
           {error}
         </div>
       )}
 
-      <div style={{ background: "#020617", border: "1px solid #1f2937", borderRadius: 8, padding: "1.5rem", marginBottom: "2rem" }}>
-        <h2 style={{ fontSize: 18, marginBottom: "1rem" }}>Add New Service Type</h2>
+      <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 8, padding: "1.5rem", marginBottom: "2rem", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+        <h2 style={{ fontSize: 18, marginBottom: "1rem", color: "#1e293b" }}>Add New Service Type</h2>
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <input
             placeholder="Service type name"
@@ -98,10 +98,10 @@ export default function AdminServicesPage() {
             style={{
               flex: 1,
               padding: "0.75rem",
-              background: "#0a0a0a",
-              border: "1px solid #374151",
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
               borderRadius: 4,
-              color: "#e5e7eb",
+              color: "#1e293b",
             }}
           />
           <button
@@ -122,21 +122,21 @@ export default function AdminServicesPage() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "2rem", color: "#9ca3af" }}>Loading services...</div>
+        <div style={{ textAlign: "center", padding: "2rem", color: "#64748b" }}>Loading services...</div>
       ) : services.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "2rem", color: "#9ca3af" }}>No service types yet.</div>
+        <div style={{ textAlign: "center", padding: "2rem", color: "#64748b" }}>No service types yet.</div>
       ) : (
-        <div style={{ background: "#020617", border: "1px solid #1f2937", borderRadius: 8, overflow: "hidden" }}>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead style={{ background: "#0a0a0a" }}>
+            <thead style={{ background: "#f8fafc" }}>
               <tr>
-                <th style={{ padding: "1rem", textAlign: "left", fontSize: 14, fontWeight: 600 }}>Name</th>
-                <th style={{ padding: "1rem", textAlign: "right", fontSize: 14, fontWeight: 600 }}>Actions</th>
+                <th style={{ padding: "1rem", textAlign: "left", fontSize: 14, fontWeight: 600, color: "#475569" }}>Name</th>
+                <th style={{ padding: "1rem", textAlign: "right", fontSize: 14, fontWeight: 600, color: "#475569" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {services.map((s) => (
-                <tr key={s.id} style={{ borderTop: "1px solid #1f2937" }}>
+                <tr key={s.id} style={{ borderTop: "1px solid #e2e8f0" }}>
                   <td style={{ padding: "1rem" }}>
                     {editingId === s.id ? (
                       <input
@@ -147,15 +147,15 @@ export default function AdminServicesPage() {
                         style={{
                           width: "100%",
                           padding: "0.5rem",
-                          background: "#0a0a0a",
-                          border: "1px solid #374151",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
                           borderRadius: 4,
-                          color: "#e5e7eb",
+                          color: "#1e293b",
                         }}
                         autoFocus
                       />
                     ) : (
-                      <span style={{ fontSize: 14 }}>{s.name}</span>
+                      <span style={{ fontSize: 14, color: "#1e293b" }}>{s.name}</span>
                     )}
                   </td>
                   <td style={{ padding: "1rem", textAlign: "right" }}>
@@ -182,9 +182,9 @@ export default function AdminServicesPage() {
                           }}
                           style={{
                             padding: "0.4rem 0.8rem",
-                            background: "#374151",
-                            color: "#e5e7eb",
-                            border: "none",
+                            background: "#f1f5f9",
+                            color: "#475569",
+                            border: "1px solid #e2e8f0",
                             borderRadius: 4,
                             fontSize: 12,
                             cursor: "pointer",
@@ -202,9 +202,9 @@ export default function AdminServicesPage() {
                           }}
                           style={{
                             padding: "0.4rem 0.8rem",
-                            background: "#1f2937",
-                            color: "#e5e7eb",
-                            border: "1px solid #374151",
+                            background: "#f1f5f9",
+                            color: "#475569",
+                            border: "1px solid #e2e8f0",
                             borderRadius: 4,
                             fontSize: 12,
                             cursor: "pointer",
@@ -216,9 +216,9 @@ export default function AdminServicesPage() {
                           onClick={() => deleteService(s.id)}
                           style={{
                             padding: "0.4rem 0.8rem",
-                            background: "#7f1d1d",
-                            color: "#fca5a5",
-                            border: "1px solid #991b1b",
+                            background: "#fef2f2",
+                            color: "#dc2626",
+                            border: "1px solid #fecaca",
                             borderRadius: 4,
                             fontSize: 12,
                             cursor: "pointer",

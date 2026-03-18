@@ -91,10 +91,19 @@ export default function AdminVehiclesPage() {
     }
   };
 
+  const inputStyle = {
+    width: "100%",
+    padding: "0.5rem",
+    background: "#f8fafc",
+    border: "1px solid #e2e8f0",
+    borderRadius: 4,
+    color: "#1e293b",
+  };
+
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700 }}>Vehicle Management</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: "#1e293b" }}>Vehicle Management</h1>
         <button
           onClick={() => {
             setEditingId(null);
@@ -104,8 +113,8 @@ export default function AdminVehiclesPage() {
           disabled={loading}
           style={{
             padding: "0.75rem 1.5rem",
-            background: loading ? "#374151" : "#D4AF37",
-            color: loading ? "#9ca3af" : "#000",
+            background: loading ? "#e2e8f0" : "#D4AF37",
+            color: loading ? "#94a3b8" : "#000",
             border: "none",
             borderRadius: 6,
             fontWeight: 600,
@@ -119,53 +128,39 @@ export default function AdminVehiclesPage() {
       </div>
 
       {error && (
-        <div style={{ background: "#7f1d1d", color: "#fca5a5", padding: "0.75rem", borderRadius: 6, marginBottom: "1rem" }}>
+        <div style={{ background: "#fef2f2", color: "#dc2626", padding: "0.75rem", borderRadius: 6, marginBottom: "1rem", border: "1px solid #fecaca" }}>
           {error}
         </div>
       )}
 
       {/* Form */}
       {showForm && (
-        <div style={{ background: "#020617", border: "1px solid #1f2937", borderRadius: 8, padding: "1.5rem", marginBottom: "2rem" }}>
-          <h2 style={{ fontSize: 18, marginBottom: "1rem" }}>{editingId ? "Edit Vehicle" : "Add New Vehicle"}</h2>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 8, padding: "1.5rem", marginBottom: "2rem", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          <h2 style={{ fontSize: 18, marginBottom: "1rem", color: "#1e293b" }}>{editingId ? "Edit Vehicle" : "Add New Vehicle"}</h2>
           <form onSubmit={handleSubmit}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
               <div>
-                <label style={{ display: "block", marginBottom: 4, fontSize: 13 }}>Vehicle Name *</label>
+                <label style={{ display: "block", marginBottom: 4, fontSize: 13, color: "#475569" }}>Vehicle Name *</label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  style={{
-                    width: "100%",
-                    padding: "0.5rem",
-                    background: "#0a0a0a",
-                    border: "1px solid #374151",
-                    borderRadius: 4,
-                    color: "#e5e7eb",
-                  }}
+                  style={inputStyle}
                 />
               </div>
               <div>
-                <label style={{ display: "block", marginBottom: 4, fontSize: 13 }}>Category</label>
+                <label style={{ display: "block", marginBottom: 4, fontSize: 13, color: "#475569" }}>Category</label>
                 <input
                   type="text"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   placeholder="e.g. Business Class"
-                  style={{
-                    width: "100%",
-                    padding: "0.5rem",
-                    background: "#0a0a0a",
-                    border: "1px solid #374151",
-                    borderRadius: 4,
-                    color: "#e5e7eb",
-                  }}
+                  style={inputStyle}
                 />
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
-                <label style={{ display: "block", marginBottom: 4, fontSize: 13 }}>Vehicle Image</label>
+                <label style={{ display: "block", marginBottom: 4, fontSize: 13, color: "#475569" }}>Vehicle Image</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -173,7 +168,6 @@ export default function AdminVehiclesPage() {
                     const file = e.target.files?.[0];
                     if (!file) return;
 
-                    // Validate file size (max 5MB)
                     if (file.size > 5 * 1024 * 1024) {
                       setError("Image size must be less than 5MB");
                       return;
@@ -203,7 +197,7 @@ export default function AdminVehiclesPage() {
 
                       const data = await res.json();
                       console.log("[Upload] Success! URL:", data.url);
-                      
+
                       if (data.url) {
                         setFormData((prev) => ({ ...prev, image: data.url }));
                         console.log("[Upload] Form data updated with URL:", data.url);
@@ -219,24 +213,19 @@ export default function AdminVehiclesPage() {
                   }}
                   disabled={uploadingImage}
                   style={{
-                    width: "100%",
-                    padding: "0.5rem",
-                    background: "#0a0a0a",
-                    border: "1px solid #374151",
-                    borderRadius: 4,
-                    color: "#e5e7eb",
+                    ...inputStyle,
                     fontSize: 13,
                     cursor: uploadingImage ? "not-allowed" : "pointer",
                     opacity: uploadingImage ? 0.6 : 1,
                   }}
                 />
                 {uploadingImage && (
-                  <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
+                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>
                     ⏳ Uploading image...
                   </div>
                 )}
                 {formData.image && !uploadingImage && (
-                  <div style={{ fontSize: 11, color: "#22c55e", marginTop: 4 }}>
+                  <div style={{ fontSize: 11, color: "#16a34a", marginTop: 4 }}>
                     ✅ Image uploaded successfully
                   </div>
                 )}
@@ -249,7 +238,7 @@ export default function AdminVehiclesPage() {
                         maxWidth: "100%",
                         maxHeight: 200,
                         borderRadius: 4,
-                        border: "1px solid #374151",
+                        border: "1px solid #e2e8f0",
                         objectFit: "cover",
                       }}
                       onError={(e) => {
@@ -258,47 +247,33 @@ export default function AdminVehiclesPage() {
                     />
                   </div>
                 )}
-                <small style={{ fontSize: 11, color: "#9ca3af", marginTop: 4, display: "block" }}>
+                <small style={{ fontSize: 11, color: "#64748b", marginTop: 4, display: "block" }}>
                   Upload an image from your device. Max size: 5MB (JPG, PNG, GIF, WebP)
                 </small>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
                 <div>
-                  <label style={{ display: "block", marginBottom: 4, fontSize: 13 }}>Passengers</label>
+                  <label style={{ display: "block", marginBottom: 4, fontSize: 13, color: "#475569" }}>Passengers</label>
                   <input
                     type="number"
                     min="0"
                     value={formData.passengers}
                     onChange={(e) => setFormData({ ...formData, passengers: Number(e.target.value) })}
-                    style={{
-                      width: "100%",
-                      padding: "0.5rem",
-                      background: "#0a0a0a",
-                      border: "1px solid #374151",
-                      borderRadius: 4,
-                      color: "#e5e7eb",
-                    }}
+                    style={inputStyle}
                   />
                 </div>
                 <div>
-                  <label style={{ display: "block", marginBottom: 4, fontSize: 13 }}>Luggage</label>
+                  <label style={{ display: "block", marginBottom: 4, fontSize: 13, color: "#475569" }}>Luggage</label>
                   <input
                     type="number"
                     min="0"
                     value={formData.luggage}
                     onChange={(e) => setFormData({ ...formData, luggage: Number(e.target.value) })}
-                    style={{
-                      width: "100%",
-                      padding: "0.5rem",
-                      background: "#0a0a0a",
-                      border: "1px solid #374151",
-                      borderRadius: 4,
-                      color: "#e5e7eb",
-                    }}
+                    style={inputStyle}
                   />
                 </div>
                 <div>
-                  <label style={{ display: "block", marginBottom: 4, fontSize: 13 }}>Rate (CAD)</label>
+                  <label style={{ display: "block", marginBottom: 4, fontSize: 13, color: "#475569" }}>Rate (CAD)</label>
                   <input
                     type="number"
                     min="0"
@@ -306,32 +281,20 @@ export default function AdminVehiclesPage() {
                     value={formData.rate}
                     onChange={(e) => setFormData({ ...formData, rate: Number(e.target.value) })}
                     placeholder="0.00"
-                    style={{
-                      width: "100%",
-                      padding: "0.5rem",
-                      background: "#0a0a0a",
-                      border: "1px solid #374151",
-                      borderRadius: 4,
-                      color: "#e5e7eb",
-                    }}
+                    style={inputStyle}
                   />
                 </div>
               </div>
             </div>
             <div style={{ marginBottom: "1rem" }}>
-              <label style={{ display: "block", marginBottom: 4, fontSize: 13 }}>Description</label>
+              <label style={{ display: "block", marginBottom: 4, fontSize: 13, color: "#475569" }}>Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
                 style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  background: "#0a0a0a",
-                  border: "1px solid #374151",
-                  borderRadius: 4,
-                  color: "#e5e7eb",
-                  resize: "vertical",
+                  ...inputStyle,
+                  resize: "vertical" as const,
                 }}
               />
             </div>
@@ -359,9 +322,9 @@ export default function AdminVehiclesPage() {
                 }}
                 style={{
                   padding: "0.5rem 1rem",
-                  background: "#374151",
-                  color: "#e5e7eb",
-                  border: "none",
+                  background: "#f1f5f9",
+                  color: "#475569",
+                  border: "1px solid #e2e8f0",
                   borderRadius: 4,
                   cursor: "pointer",
                 }}
@@ -375,32 +338,33 @@ export default function AdminVehiclesPage() {
 
       {/* Vehicles List */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "2rem", color: "#9ca3af" }}>Loading vehicles...</div>
+        <div style={{ textAlign: "center", padding: "2rem", color: "#64748b" }}>Loading vehicles...</div>
       ) : vehicles.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "2rem", color: "#9ca3af" }}>No vehicles yet. Add one to get started.</div>
+        <div style={{ textAlign: "center", padding: "2rem", color: "#64748b" }}>No vehicles yet. Add one to get started.</div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1.5rem" }}>
           {vehicles.map((v) => (
             <div
               key={v.id}
               style={{
-                background: "#020617",
-                border: "1px solid #1f2937",
+                background: "#ffffff",
+                border: "1px solid #e2e8f0",
                 borderRadius: 8,
                 overflow: "hidden",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
               }}
             >
               {v.image && (
-                <div style={{ width: "100%", height: 200, overflow: "hidden", background: "#0a0a0a" }}>
+                <div style={{ width: "100%", height: 200, overflow: "hidden", background: "#f1f5f9" }}>
                   <img src={v.image} alt={v.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
               )}
               <div style={{ padding: "1rem" }}>
                 {v.category && (
-                  <div style={{ fontSize: 12, color: "#D4AF37", marginBottom: 4 }}>{v.category}</div>
+                  <div style={{ fontSize: 12, color: "#D4AF37", marginBottom: 4, fontWeight: 600 }}>{v.category}</div>
                 )}
-                <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{v.name}</h3>
-                <div style={{ display: "flex", gap: "1rem", marginBottom: 8, fontSize: 13, color: "#9ca3af" }}>
+                <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: "#1e293b" }}>{v.name}</h3>
+                <div style={{ display: "flex", gap: "1rem", marginBottom: 8, fontSize: 13, color: "#64748b" }}>
                   <span>👥 {v.passengers}</span>
                   <span>🧳 {v.luggage}</span>
                 </div>
@@ -409,11 +373,11 @@ export default function AdminVehiclesPage() {
                     <span style={{ fontSize: 18, fontWeight: 700, color: "#D4AF37" }}>
                       ${v.rate.toFixed(2)}
                     </span>
-                    <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: 4 }}>CAD</span>
+                    <span style={{ fontSize: 12, color: "#64748b", marginLeft: 4 }}>CAD</span>
                   </div>
                 )}
                 {v.description && (
-                  <p style={{ fontSize: 13, color: "#d1d5db", marginBottom: "1rem", lineHeight: 1.5 }}>
+                  <p style={{ fontSize: 13, color: "#475569", marginBottom: "1rem", lineHeight: 1.5 }}>
                     {v.description}
                   </p>
                 )}
@@ -423,9 +387,9 @@ export default function AdminVehiclesPage() {
                     style={{
                       flex: 1,
                       padding: "0.5rem",
-                      background: "#1f2937",
-                      color: "#e5e7eb",
-                      border: "1px solid #374151",
+                      background: "#f1f5f9",
+                      color: "#475569",
+                      border: "1px solid #e2e8f0",
                       borderRadius: 4,
                       cursor: "pointer",
                       fontSize: 13,
@@ -438,9 +402,9 @@ export default function AdminVehiclesPage() {
                     style={{
                       flex: 1,
                       padding: "0.5rem",
-                      background: "#7f1d1d",
-                      color: "#fca5a5",
-                      border: "1px solid #991b1b",
+                      background: "#fef2f2",
+                      color: "#dc2626",
+                      border: "1px solid #fecaca",
                       borderRadius: 4,
                       cursor: "pointer",
                       fontSize: 13,
